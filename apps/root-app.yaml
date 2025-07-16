@@ -18,10 +18,8 @@ spec:
     targetRevision: main
     path: apps
     directory:
-      recurse: true
-      exclude: |
-        root-app.yaml
-        */manifests/**
+      recurse: false
+      include: "*/app.yaml"
   syncPolicy:
     automated:
       prune: true
