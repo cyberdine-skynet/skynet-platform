@@ -12,6 +12,7 @@ server:
   # Server arguments
   extraArgs:
     - --insecure # Remove this in production and use proper TLS
+    - --dex-server=http://argocd-dex-server:5556 # Use HTTP for Dex
   # Resource limits
   resources:
     requests:
@@ -45,3 +46,10 @@ applicationSet:
     limits:
       cpu: 200m
       memory: 128Mi
+# Dex configuration for insecure access
+dex:
+  enabled: true
+  # Use insecure mode for IP-based access
+  env:
+    - name: ARGO_DEX_INSECURE
+      value: "true"
