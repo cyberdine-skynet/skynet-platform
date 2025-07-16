@@ -84,15 +84,7 @@ spec:
             server.insecure: false
             controller.diff.server.side: true
             server.grpc.web: true
-          # Repository credentials will be managed by secrets  
-          repositories:
-            - url: https://github.com/cyberdine-skynet/skynet-platform
-              passwordSecret:
-                name: github-repo-secret
-                key: password
-              usernameSecret:
-                name: github-repo-secret
-                key: username
+          # Repository credentials are managed by separate secrets
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
