@@ -1,0 +1,152 @@
+# Traefik Helm values optimized for Talos OS bare metal
+deployment:
+  enabled: true
+  kind: Deployment
+  replicas: 1 # Will be dynamically set based on cluster_type
+  # Pod disruption budget (disabled for single node)
+  podDisruptionBudget:
+    enabled: false # Will be dynamically set based on enable_pod_disruption_budgets
+    maxUnavailable: 1
+# Service configuration optimized for bare metal
+service:
+  enabled: true
+  single: true
+  type: NodePort # Using NodePort for bare metal instead of LoadBalancer
+  annotations:
+    # Talos specific annotations
+    kubernetes.io/os: linux
+  spec:
+    externalTrafficPolicy: Local # Better for bare metal
+# Ports configuration
+ports:
+  web:
+    port: 80
+    exposedPort: 80
+    nodePort: 30080
+    protocol: TCP
+  websecure:
+    port: 443
+    exposedPort: 443
+    nodePort: 30443
+    protocol: TCP
+    tls:
+      enabled: true
+  traefik:
+    port: 9000
+    exposedPort: 9000
+    nodePort: 30900
+    protocol: TCP
+# Ingress route for dashboard
+ingressRoute:
+  dashboard:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: traefik
+    matchRule: Host(`traefik.${domain}`)
+    entryPoints: ["websecure"]
+    tls:
+      secretName: traefik-dashboard-tls
+# Certificate resolvers
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: ${letsencrypt_email}
+      storage: /data/acme.json
+      keyType: EC256
+      httpChallenge:
+        entryPoint: web
+      caServer: ${letsencrypt_server}
+# Persistence configuration for Talos
+persistence:
+  enabled: true
+  name: data
+  accessMode: ReadWriteOnce
+  size: 128Mi
+  storageClass: ${storage_class}
+  path: /data
+  annotations:
+    # Talos specific storage annotations
+    volume.kubernetes.io/storage-class: ${storage_class}
+# Resource configuration optimized for NUC
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: ${default_cpu_limit}
+    memory: 1Gi
+# Security context for Talos
+securityContext:
+  capabilities:
+    drop: [ALL]
+    add: [NET_BIND_SERVICE]
+  readOnlyRootFilesystem: true
+  runAsGroup: 65532
+  runAsNonRoot: true
+  runAsUser: 65532
+podSecurityContext:
+  fsGroup: 65532
+  fsGroupChangePolicy: "OnRootMismatch"
+# Logs configuration
+logs:
+  general:
+    format: json
+    level: INFO
+  access:
+    enabled: true
+    format: json
+# Metrics for monitoring
+metrics:
+  prometheus:
+    enabled: true # Will be dynamically set based on enable_metrics
+    addEntryPointsLabels: true
+    addServicesLabels: true
+# Providers configuration
+providers:
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: true
+    allowExternalNameServices: true
+  kubernetesIngress:
+    enabled: true
+    allowExternalNameServices: true
+    publishedService:
+      enabled: true
+# Global arguments
+globalArguments:
+  - "--global.checknewversion=false"
+  - "--global.sendanonymoususage=false"
+# Additional arguments for Talos optimization
+additionalArguments:
+  - "--serversTransport.insecureSkipVerify=true"
+  - "--log.level=INFO"
+  - "--accesslog=true"
+  - "--entrypoints.web.address=:80"
+  - "--entrypoints.websecure.address=:443"
+  - "--api.dashboard=true"
+  - "--ping=true"
+  - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+  - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+  - "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
+# Node selector and tolerations for Talos
+nodeSelector:
+  kubernetes.io/os: linux
+tolerations: []
+# Affinity rules (disabled for single node)
+affinity: {} # Will be dynamically configured based on enable_affinity_rules
+# Priority class for critical workloads
+priorityClassName: ""
+# Environment variables for Talos optimization
+env:
+  - name: POD_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName

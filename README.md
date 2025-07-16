@@ -23,20 +23,26 @@ skynet-platform/
 
 **Your platform is pre-configured and ready to deploy!**
 
-1. **Deploy the complete platform:**
+### **Option 1: Terraform Deployment (Recommended for Talos)**
 
-   ```bash
-   ./deploy.sh
-   ```
+```bash
+./terraform-deploy.sh
+```
 
-2. **Access Argo CD:**
-   - **Domain**: `https://argocd.fle.api64.de` (once DNS is configured)
-   - **NodePort**: `https://NODE_IP:30443`
-   - **Port-forward**: `kubectl port-forward svc/argocd-server -n argocd 8080:443`
+### **Option 2: Direct Kubernetes Deployment**
 
-3. **Login with GitHub SSO:**
-   - Use your GitHub account from the `cyberdine-skynet` organization
-   - Or use the default admin account (get password with the deploy script)
+```bash
+./deploy.sh
+```
+
+### **Platform Access**
+- **Domain**: `https://argocd.fle.api64.de` (once DNS is configured)
+- **NodePort**: `https://NODE_IP:30443`
+- **Port-forward**: `kubectl port-forward svc/argocd-server -n argocd 8080:443`
+
+### **Authentication**
+- Use your GitHub account from the `cyberdine-skynet` organization
+- Or use the default admin account (get password from deploy script output)
 
 ## 📋 Applications
 
@@ -81,7 +87,8 @@ skynet-platform/
 
 - [Setup Guide](SETUP.md) - Detailed deployment instructions
 - [GitHub SSO](GITHUB_SSO.md) - Single Sign-On configuration
-- [Architecture](docs/architecture.md) - System design and components
+- [Talos Deployment](TALOS.md) - Talos OS specific instructions
+- [Security Guide](SECURITY.md) - Security considerations and best practices
 
 ## 🛠️ Customization
 

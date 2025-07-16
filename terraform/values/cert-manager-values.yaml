@@ -1,0 +1,134 @@
+# Cert-Manager Helm values optimized for Talos OS bare metal
+# Global settings
+global:
+  leaderElection:
+    namespace: cert-manager
+# Main cert-manager controller
+replicaCount: 1 # Single replica for single-node cluster
+image:
+  repository: quay.io/jetstack/cert-manager-controller
+  pullPolicy: IfNotPresent
+# Resource limits optimized for NUC/bare metal
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 200m # Conservative limits for NUC
+    memory: 256Mi
+# Security settings optimized for Talos
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+# Service account
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+  annotations:
+    # Talos specific annotations
+    kubernetes.io/os: linux
+# Webhook configuration
+webhook:
+  replicaCount: 1
+  timeoutSeconds: 10
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  # Security context for webhook
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1001
+# CA Injector
+cainjector:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  # Security context for CA injector
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1001
+# Monitoring configuration
+prometheus:
+  enabled: true # Enable metrics collection
+  servicemonitor:
+    enabled: true
+    prometheusInstance: default
+    targetPort: 9402
+    path: /metrics
+    interval: 60s
+    scrapeTimeout: 30s
+    labels: {}
+# Additional configuration for Talos
+extraArgs:
+  - --feature-gates=ExperimentalGatewayAPISupport=true
+  - --dns01-recursive-nameservers-only
+  - --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53
+# Node selector for Talos nodes
+nodeSelector:
+  kubernetes.io/os: linux
+# Tolerations for Talos (none needed typically)
+tolerations: []
+# Affinity rules (disabled for single node)
+affinity: {}
+# Pod disruption budget (disabled for single node)
+podDisruptionBudget:
+  enabled: false
+# Install CRDs
+installCRDs: true
+# Feature gates
+featureGates: "ExperimentalGatewayAPISupport=true"
+# Startup API check
+startupapicheck:
+  enabled: true
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1001
+# Volume mounts for Talos
+volumeMounts: []
+volumes: []
+# Environment variables
+env: []
+# Additional labels
+podLabels:
+  app.kubernetes.io/component: cert-manager
+# Additional annotations
+podAnnotations:
+  cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
