@@ -6,11 +6,9 @@ global:
   domain: argocd.fle.api64.de
 # Server configuration
 server:
-  # NodePort service configuration
+  # Service configuration
   service:
-    type: NodePort
-    nodePortHttp: 30180
-    nodePortHttps: 30543
+    type: ClusterIP
   # Server arguments
   extraArgs:
     - --insecure # Remove this in production and use proper TLS
