@@ -1,0 +1,146 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/component: ingress
+spec:
+  project: default
+  source:
+    repoURL: https://traefik.github.io/charts
+    chart: traefik
+    targetRevision: 26.1.0
+    helm:
+      valuesObject:
+        # Global configuration
+        globalArguments:
+          - "--global.checknewversion=false"
+          - "--global.sendanonymoususage=false"
+        # Deployment configuration
+        deployment:
+          replicas: 2
+        # Service configuration
+        service:
+          type: LoadBalancer
+          annotations:
+            metallb.universe.tf/allow-shared-ip: "skynet-ingress"
+          spec:
+            externalTrafficPolicy: Local
+        # Ports configuration
+        ports:
+          web:
+            port: 80
+            exposedPort: 80
+            nodePort: 30080
+          websecure:
+            port: 443
+            exposedPort: 443
+            nodePort: 30443
+            tls:
+              enabled: true
+          traefik:
+            port: 9000
+            exposedPort: 9000
+        # Ingress route for dashboard
+        ingressRoute:
+          dashboard:
+            enabled: true
+            annotations:
+              kubernetes.io/ingress.class: traefik
+            matchRule: Host(`traefik.fle.api64.de`)
+            entryPoints: ["websecure"]
+            tls:
+              secretName: traefik-dashboard-tls
+        # Providers configuration
+        providers:
+          kubernetesCRD:
+            enabled: true
+            allowCrossNamespace: true
+            allowExternalNameServices: true
+          kubernetesIngress:
+            enabled: true
+            allowExternalNameServices: true
+            publishedService:
+              enabled: true
+        # Certificate resolvers
+        certificatesResolvers:
+          letsencrypt:
+            acme:
+              email: admin@fle.api64.de
+              storage: /data/acme.json
+              keyType: EC256
+              httpChallenge:
+                entryPoint: web
+                # Uncomment for DNS challenge
+                # dnsChallenge:
+                #   provider: cloudflare
+                #   resolvers:
+                #     - "1.1.1.1:53"
+                #     - "8.8.8.8:53"
+        # Persistence for ACME certificates
+        persistence:
+          enabled: true
+          size: 128Mi
+          storageClass: "local-path"
+          accessMode: ReadWriteOnce
+          path: /data
+        # Resources
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        # Security context
+        securityContext:
+          capabilities:
+            drop: [ALL]
+            add: [NET_BIND_SERVICE]
+          readOnlyRootFilesystem: true
+          runAsGroup: 65532
+          runAsNonRoot: true
+          runAsUser: 65532
+        # Pod security context
+        podSecurityContext:
+          fsGroup: 65532
+          fsGroupChangePolicy: "OnRootMismatch"
+        # Logs
+        logs:
+          general:
+            level: INFO
+          access:
+            enabled: true
+            format: json
+        # Metrics
+        metrics:
+          prometheus:
+            enabled: true
+            addEntryPointsLabels: true
+            addServicesLabels: true
+            buckets:
+              - 0.1
+              - 0.3
+              - 1.2
+              - 5.0
+        # Additional configuration
+        additionalArguments:
+          - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+          - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-v02.api.letsencrypt.org/directory"
+          - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+          - "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik-system
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  revisionHistoryLimit: 10

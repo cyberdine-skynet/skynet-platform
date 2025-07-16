@@ -1,5 +1,67 @@
-# Object file
-*.o
+# Skynet Platform GitIgnore
 
-# Ada Library Information
-*.ali
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Secrets and sensitive files
+*.key
+*.pem
+*.crt
+*.p12
+secrets/
+private/
+
+# Note: The secrets/ directory contains sensitive GitHub tokens
+# It's included in the repo for demo purposes but should be secured
+# in production using tools like Sealed Secrets or External Secrets
+
+# Kubernetes local files
+kubeconfig
+*.kubeconfig
+
+# Helm
+*.tgz
+charts/*/charts/
+charts/*/requirements.lock
+
+# ArgoCD local files
+argocd-*
+.argocd/
+
+# Local development
+local/
+dev/
+debug/
+
+# Logs
+*.log
+logs/
+
+# Backup files
+backup/
+*.backup
