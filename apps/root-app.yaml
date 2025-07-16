@@ -18,8 +18,8 @@ spec:
     targetRevision: main
     path: apps
     directory:
-      recurse: false
-      include: "*/app.yaml"
+      recurse: true
+      include: "**/app.yaml"
   syncPolicy:
     automated:
       prune: true
