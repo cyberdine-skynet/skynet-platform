@@ -23,8 +23,8 @@ spec:
         server:
           service:
             type: NodePort
-            nodePortHttp: 30080
-            nodePortHttps: 30443
+            nodePortHttp: 30180
+            nodePortHttps: 30543
           # Additional server configuration
           extraArgs:
             - --insecure
