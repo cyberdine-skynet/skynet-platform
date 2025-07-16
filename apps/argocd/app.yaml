@@ -84,7 +84,7 @@ spec:
             server.insecure: false
             controller.diff.server.side: true
             server.grpc.web: true
-          # Repository credentials are managed by separate secrets
+            # Repository credentials are managed by separate secrets
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
