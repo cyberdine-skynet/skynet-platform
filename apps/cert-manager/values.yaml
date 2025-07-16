@@ -58,11 +58,11 @@ cainjector:
     limits:
       cpu: 100m
       memory: 128Mi
-# Monitoring
+# Monitoring (disabled until Prometheus Operator is installed)
 prometheus:
-  enabled: true
+  enabled: false
   servicemonitor:
-    enabled: true
+    enabled: false
     prometheusInstance: default
     targetPort: 9402
     path: /metrics
