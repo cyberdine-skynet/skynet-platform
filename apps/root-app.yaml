@@ -19,7 +19,9 @@ spec:
     path: apps
     directory:
       recurse: true
-      exclude: "root-app.yaml"
+      exclude: |
+        root-app.yaml
+        */manifests/**
   syncPolicy:
     automated:
       prune: true
