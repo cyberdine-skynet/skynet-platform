@@ -135,7 +135,7 @@ spec:
           - "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
   destination:
     server: https://kubernetes.default.svc
-    namespace: traefik-system
+    namespace: traefik
   syncPolicy:
     automated:
       selfHeal: true

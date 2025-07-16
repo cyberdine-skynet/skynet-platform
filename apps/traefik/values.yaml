@@ -63,7 +63,15 @@ logs:
 # Metrics
 metrics:
   prometheus:
-    enabled: false
+    enabled: true
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    # Remove buckets configuration to avoid parsing issues
+    # buckets:
+    #   - 0.1
+    #   - 0.3
+    #   - 1.2
+    #   - 5.0
 # Global arguments
 globalArguments:
   - "--global.checknewversion=false"
