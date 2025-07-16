@@ -1,12 +1,21 @@
 # Development environment configuration for Talos OS bare metal
-cluster_name = "skynet-dev"
+# Cluster: skynetcluster (talos-5kn-42d)
+# Talos Version: v1.9.5
+# Kubernetes: v1.32.3
+# Node IP: 192.168.1.175
+
+cluster_name = "skynetcluster"  # Match your actual cluster name
 domain       = "fle.api64.de"
 github_org   = "cyberdine-skynet"
 github_repo  = "skynet-platform"
 
 # Infrastructure type
 infrastructure_type = "baremetal-talos"
-cluster_type        = "single-node"  # or "multi-node" if you have multiple NUCs
+cluster_type        = "single-node"  # Confirmed single control-plane node
+
+# Node configuration
+node_ip = "192.168.1.175"  # Your actual node IP
+node_name = "talos-5kn-42d"  # Your actual node name
 
 # These will be prompted or set via environment variables
 # github_pat                 = "github_pat_..." 

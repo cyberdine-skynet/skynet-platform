@@ -29,6 +29,16 @@ resource "kubernetes_namespace" "traefik" {
   }
 }
 
+resource "kubernetes_namespace" "local_path_storage" {
+  metadata {
+    name = "local-path-storage"
+    labels = {
+      "app.kubernetes.io/name"    = "local-path-provisioner"
+      "app.kubernetes.io/part-of" = "skynet-platform"
+    }
+  }
+}
+
 # Install Argo CD using Helm
 resource "helm_release" "argocd" {
   name       = "argocd"

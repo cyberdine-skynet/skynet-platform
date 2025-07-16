@@ -155,3 +155,16 @@ variable "enable_grafana" {
   type        = bool
   default     = false
 }
+
+# Talos cluster specific variables
+variable "node_ip" {
+  description = "IP address of the Talos node"
+  type        = string
+  default     = "192.168.1.175"
+}
+
+variable "node_name" {
+  description = "Name of the Talos node"
+  type        = string
+  default     = "talos-5kn-42d"
+}

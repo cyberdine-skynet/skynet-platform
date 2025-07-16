@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-path-provisioner
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # Deploy before other storage-dependent apps
+  labels:
+    app.kubernetes.io/name: local-path-provisioner
+    app.kubernetes.io/component: storage
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/cyberdine-skynet/skynet-platform
+    targetRevision: main
+    path: apps/local-path-provisioner/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: local-path-storage
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  revisionHistoryLimit: 10
