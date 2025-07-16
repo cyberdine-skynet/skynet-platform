@@ -22,7 +22,7 @@ spec:
           - "--global.sendanonymoususage=false"
         # Deployment configuration
         deployment:
-          replicas: 2
+          replicas: 1
         # Service configuration
         service:
           type: LoadBalancer
