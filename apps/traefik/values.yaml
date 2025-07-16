@@ -60,18 +60,10 @@ logs:
     enabled: true
     format: json
     filters: {}
-# Metrics
+# Metrics - disabled to prevent startup crashes
 metrics:
   prometheus:
-    enabled: true
-    addEntryPointsLabels: true
-    addServicesLabels: true
-    # Remove buckets configuration to avoid parsing issues
-    # buckets:
-    #   - 0.1
-    #   - 0.3
-    #   - 1.2
-    #   - 5.0
+    enabled: false
 # Global arguments
 globalArguments:
   - "--global.checknewversion=false"
