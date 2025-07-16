@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-issuer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app.kubernetes.io/name: cluster-issuer
+    app.kubernetes.io/component: security
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/cyberdine-skynet/skynet-platform
+    targetRevision: main
+    path: apps/cluster-issuer/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+  revisionHistoryLimit: 10
