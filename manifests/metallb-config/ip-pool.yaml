@@ -1,11 +1,18 @@
+# MetalLB IP Address Pool Configuration
+# IMPORTANT: Update the IP range to match YOUR network
+# This is a template - modify for your environment
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
   name: default-pool
   namespace: metallb-system
 spec:
-  addresses:
-    - 192.168.1.200-192.168.1.220
+  # CONFIGURE THIS IP RANGE FOR YOUR NETWORK
+  # Example networks:
+  # - 192.168.1.200-192.168.1.220  # Home network
+  # - 10.0.0.200-10.0.0.220        # Private network
+  # - 172.16.0.200-172.16.0.220    # Docker network  addresses:
+  - 192.168.1.200-192.168.1.220# Updated for your 192.168.1.x network
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
