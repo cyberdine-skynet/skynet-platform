@@ -19,7 +19,7 @@ spec:
     targetRevision: 0.14.8
     helm:
       values: |
-        # MetalLB Helm values for Talos OS
+        # MetalLB Helm values for Talos OS with PodSecurity fixes
         speaker:
           frr:
             enabled: false
@@ -32,6 +32,13 @@ spec:
           - key: node-role.kubernetes.io/control-plane
             operator: Exists
             effect: NoSchedule
+          # Fix PodSecurity issues
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            fsGroup: 0
+          # Allow privileged operations
+          hostNetwork: true
         controller:
           nodeSelector:
             node-role.kubernetes.io/control-plane: ""
@@ -39,6 +46,9 @@ spec:
           - key: node-role.kubernetes.io/control-plane
             operator: Exists
             effect: NoSchedule
+        # Configure namespace with privileged security
+        podSecurityPolicy:
+          enabled: false
   syncPolicy:
     automated:
       prune: true
