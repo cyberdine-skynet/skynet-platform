@@ -19,7 +19,7 @@ spec:
     path: apps
     directory:
       recurse: true
-      include: "**/app.yaml"
+      include: "*/app.yaml"
       exclude: "argocd/**"
   syncPolicy:
     automated:

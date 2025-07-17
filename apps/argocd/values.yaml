@@ -53,7 +53,6 @@ dex:
   env:
     - name: ARGO_DEX_INSECURE
       value: "true"
-
 # Repo server configuration
 repoServer:
   # Configure the container port with a name
