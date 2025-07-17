@@ -1,60 +1,150 @@
 # Skynet Platform
 
-A clean, production-ready GitOps platform ## 📊 Current Applications
+A modern, production-ready GitOps infrastructure platform built on Talos OS Kubernetes with comprehensive tooling, security, and automation.
 
-| Application | Namespace | Status | Description | Access |
-|-------------|-----------|--------|-------------|---------|
-| **Argo CD** | `argocd` | ✅ Running | GitOps controller (Terraform managed) | NodePort 30180/30543 |
-| **Demo App** | `demo-app` | ✅ Running | Secure nginx demo workload | ClusterIP:80 → 8080 |
+## 🎯 Platform Overview
 
-## 📈 Live Cluster Status
+The Skynet Platform is a complete Kubernetes infrastructure stack featuring:
 
-- **Argo CD Applications**: 2 deployed (skynet-root-app, demo-app)
-- **Helm Releases**: 1 (argocd v2.10.7 via chart 6.7.12)
-- **Active Namespaces**: argocd, demo-app, cert-manager, plus system namespaces
-- **Demo App Replicas**: 2 pods running healthyTerraform and Helm to deploy Argo CD on Talos OS Kubernetes clusters.
+- **GitOps Continuous Deployment** via Argo CD
+- **Ingress & Load Balancing** via Traefik + MetalLB
+- **Automatic TLS Certificates** via cert-manager
+- **Encrypted Secrets Management** via SOPS + Age
+- **Infrastructure as Code** via Terraform + Helm
+- **CI/CD Security Scanning** via GitHub Actions
+
+## 📊 Current Infrastructure Status
+
+| Component | Status | Version | Access | Purpose |
+|-----------|--------|---------|---------|---------|
+| **Talos OS Kubernetes** | ✅ Running | v1.32.3 | Node: 192.168.1.175 | Container Platform |
+| **Argo CD** | ✅ Healthy | v2.13.2 | http://192.168.1.175:30180 | GitOps Controller |
+| **Traefik** | ✅ Healthy | v3.1.5 | http://192.168.1.201:9000/dashboard/ | Ingress Controller |
+| **MetalLB** | ✅ Healthy | Latest | IP Pool: 192.168.1.200-220 | LoadBalancer Provider |
+| **cert-manager** | ✅ Healthy | Latest | ClusterIssuers: staging/prod | TLS Certificate Manager |
+| **Demo App** | ✅ Running | nginx:alpine | Internal ClusterIP | Test Workload |
 
 ## 🏗️ Architecture
 
-This platform follows Infrastructure as Code (IaC) and GitOps principles:
-
-```text
-skynet-platform/
-├── terraform/                     # Infrastructure as Code
-│   ├── main.tf                   # Argo CD deployment via Helm
-│   ├── values/                   # Helm values for Argo CD
-│   └── providers.tf              # Terraform providers
-├── apps/
-│   ├── root-app-simple.yaml     # Root App-of-Apps
-│   └── workloads/                # Application workloads
-│       └── demo-app/             # Demo application
-├── manifests/                    # Kubernetes manifests
-│   └── demo-app/                 # Demo app deployment
-└── cleanup-argocd.sh            # Cleanup utility
 ```
+External Access (192.168.1.201)
+    ↓
+Traefik Ingress Controller (LoadBalancer)
+    ↓
+Kubernetes Services
+    ↓
+Application Pods
+    ↓
+Talos OS Node (192.168.1.175)
+```
+
+### Repository Structure
+
+```
+skynet-platform/
+├── 📖 README.md                           # This overview
+├── 📖 INFRASTRUCTURE.md                   # Complete architecture documentation
+├── 📖 COMMANDS.md                         # Command reference guide
+├── 📖 SETUP.md                           # Setup instructions
+├── 🔧 terraform/                         # Infrastructure as Code
+│   ├── main.tf                          # Argo CD deployment
+│   └── provider.tf                      # Terraform providers
+├── 🚀 apps/                              # Argo CD Applications
+│   ├── root-app-simple.yaml             # Root app-of-apps
+│   ├── 📖 README.md                      # Argo CD documentation
+│   └── workloads/                       # Application definitions
+│       ├── demo-app/                    # Demo application
+│       ├── metallb/                     # MetalLB Helm app
+│       ├── metallb-config/              # MetalLB configuration
+│       ├── cert-manager/                # cert-manager Helm app
+│       ├── cert-manager-issuers/        # TLS certificate issuers
+│       └── traefik/                     # Traefik Helm app
+├── 📦 manifests/                         # Kubernetes manifests
+│   ├── demo-app/                        # Demo app deployment
+│   ├── metallb-config/                  # MetalLB IP pools
+│   ├── cert-manager-issuers/            # ClusterIssuers
+│   ├── 📖 README-traefik.md             # Traefik documentation
+│   ├── 📖 README-metallb.md             # MetalLB documentation
+│   └── 📖 README-cert-manager.md        # cert-manager documentation
+├── 🔐 secrets/                          # Encrypted secrets (SOPS)
+│   ├── .sops.yaml                      # SOPS configuration
+│   └── age-key.txt                     # Age encryption key
+├── 🛠️ scripts/                          # Utility scripts
+│   └── traefik-dashboard.sh            # Dashboard access script
+└── 🔄 .github/workflows/                # CI/CD workflows
+    ├── tfsec.yml                       # Terraform security scanning
+    └── dependency-review.yml           # Dependency security review
+```
+
+## 🚀 Quick Start
+## 📚 Documentation
+
+### Complete Guides
+
+- **[📖 INFRASTRUCTURE.md](INFRASTRUCTURE.md)** - Complete architecture and component overview
+- **[📖 COMMANDS.md](COMMANDS.md)** - Comprehensive command reference for daily operations
+- **[📖 SETUP.md](SETUP.md)** - Step-by-step setup instructions
+
+### Component-Specific Documentation
+
+- **[📖 Argo CD Guide](apps/README.md)** - GitOps controller operations and troubleshooting
+- **[📖 Traefik Guide](manifests/README-traefik.md)** - Ingress controller configuration and usage
+- **[📖 MetalLB Guide](manifests/README-metallb.md)** - LoadBalancer setup and management
+- **[📖 cert-manager Guide](manifests/README-cert-manager.md)** - TLS certificate automation
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Talos OS Kubernetes cluster (bare metal)
 - Terraform installed
 - kubectl configured for your cluster
+- Git repository access
 
-### 1. Deploy Argo CD via Terraform
+### 1. Deploy Infrastructure
 
 ```bash
+# Clone repository
+git clone https://github.com/cyberdine-skynet/skynet-platform.git
+cd skynet-platform
+
+# Deploy Argo CD via Terraform
 cd terraform
 terraform init
 terraform apply
+
+# Deploy GitOps applications
+kubectl apply -f ../apps/root-app-simple.yaml
+
+# Verify deployment
+kubectl get applications -n argocd
 ```
 
-### 2. Access Argo CD
+### 2. Access Services
 
-**NodePort Access:**
-- HTTP: `http://NODE_IP:30180`
-- HTTPS: `https://NODE_IP:30543`
+**Argo CD Dashboard:**
 
-**Port Forward (alternative):**
+```bash
+# Get admin password
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+# Access via NodePort
+open http://192.168.1.175:30180
+# Login: admin / <password-from-above>
+```
+
+**Traefik Dashboard:**
+
+```bash
+# Direct access (if on same network)
+open http://192.168.1.201:9000/dashboard/
+
+# Port-forward (if external access issues)
+./scripts/traefik-dashboard.sh
+open http://localhost:8080/dashboard/
+```
+
+### 3. Verify Installation
 ```bash
 kubectl port-forward svc/argocd-server -n argocd 8080:80
 ```
