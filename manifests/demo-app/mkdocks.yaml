@@ -1,3 +1,6 @@
+# mkdocks demo-app manifest
+# This file deploys mkdocks in its own namespace as a demo application
+
 apiVersion: v1
 kind: Namespace
 metadata:
