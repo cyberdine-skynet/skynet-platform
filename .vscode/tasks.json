@@ -301,6 +301,86 @@
 				"showReuseMessage": false,
 				"clear": true
 			}
+		},
+		{
+			"label": "📚 MkDocs: Serve Development",
+			"type": "shell",
+			"command": "./scripts/mkdocs.sh",
+			"args": ["dev"],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "new"
+			},
+			"problemMatcher": [],
+			"isBackground": true
+		},
+		{
+			"label": "📚 MkDocs: Build Documentation",
+			"type": "shell",
+			"command": "./scripts/mkdocs.sh",
+			"args": ["build"],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "📚 MkDocs: Docker Preview",
+			"type": "shell",
+			"command": "./scripts/mkdocs.sh",
+			"args": ["preview"],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "new"
+			},
+			"problemMatcher": [],
+			"isBackground": true
+		},
+		{
+			"label": "📚 MkDocs: Status Check",
+			"type": "shell",
+			"command": "./scripts/mkdocs.sh",
+			"args": ["status"],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "📚 MkDocs: Validate Docs",
+			"type": "shell",
+			"command": "./scripts/mkdocs.sh",
+			"args": ["validate"],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "📚 MkDocs: Stop Docker",
+			"type": "shell",
+			"command": "./scripts/mkdocs.sh",
+			"args": ["stop"],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
 		}
 	],
 	"inputs": [

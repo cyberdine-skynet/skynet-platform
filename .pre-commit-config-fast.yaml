@@ -7,7 +7,7 @@ minimum_pre_commit_version: '3.0.0'
 
 repos:
   # Basic file cleanup (very fast)
-  - repo: https://github.com/pre-commit/pre-commit-hooks
+    - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: trailing-whitespace

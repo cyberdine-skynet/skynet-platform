@@ -1,7 +1,7 @@
 site_name: Skynet Platform Documentation
 site_description: Complete GitOps Infrastructure Platform Documentation
 site_author: Cyberdine Skynet Team
-site_url: https://docs.skynet.local
+site_url: https://docu.fle.api64.de
 theme:
   name: material
   palette:
