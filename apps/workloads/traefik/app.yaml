@@ -33,8 +33,6 @@ spec:
         ingressRoute:
           dashboard:
             enabled: true
-            annotations:
-              traefik.ingress.kubernetes.io/router.tls: "true"
 
         # Ports configuration
         ports:
@@ -53,7 +51,7 @@ spec:
           traefik:
             port: 9000
             expose:
-              default: false
+              default: true
             exposedPort: 9000
 
         # Enable cert-manager integration
