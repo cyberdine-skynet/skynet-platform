@@ -47,27 +47,28 @@ resource "helm_release" "argocd" {
     })
   ]
 
-  depends_on = [
-    module.secrets
-  ]
+  # TEMPORARILY REMOVED DEPENDENCY ON SECRETS MODULE
+  # depends_on = [
+  #   module.secrets
+  # ]
 }
 
-# Secrets module
-module "secrets" {
-  source = "./modules/secrets"
-  
-  namespace                   = var.argocd_namespace
-  github_pat                 = var.github_pat
-  github_oauth_client_id     = var.github_oauth_client_id
-  github_oauth_client_secret = var.github_oauth_client_secret
-  github_org                 = var.github_org
-  github_repo                = var.github_repo
-  domain                     = var.domain
-  admin_teams               = var.argocd_admin_teams
-  developer_teams           = var.argocd_developer_teams
-  
-  depends_on = [kubernetes_namespace.argocd]
-}
+# Secrets module - TEMPORARILY DISABLED, letting Helm manage secrets
+# module "secrets" {
+#   source = "./modules/secrets"
+#   
+#   namespace                   = var.argocd_namespace
+#   github_pat                 = var.github_pat
+#   github_oauth_client_id     = var.github_oauth_client_id
+#   github_oauth_client_secret = var.github_oauth_client_secret
+#   github_org                 = var.github_org
+#   github_repo                = var.github_repo
+#   domain                     = var.domain
+#   admin_teams               = var.argocd_admin_teams
+#   developer_teams           = var.argocd_developer_teams
+#   
+#   depends_on = [kubernetes_namespace.argocd]
+# }
 
 # Deploy the root App-of-Apps - TEMPORARILY DISABLED
 # resource "kubectl_manifest" "root_app" {
