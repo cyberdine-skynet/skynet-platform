@@ -18,43 +18,42 @@ spec:
         app: mkdocs-docs
     spec:
       containers:
-      - name: mkdocs-docs
-        image: ghcr.io/cyberdine-skynet/skynet-platform-docs:latest
-        ports:
-        - containerPort: 8080
-          name: http
-        resources:
-          requests:
-            memory: "32Mi"
-            cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "200m"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 101
-          capabilities:
-            drop:
-            - ALL
+        - name: mkdocs-docs
+          image: ghcr.io/cyberdine-skynet/skynet-platform-docs:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 101
+            capabilities:
+              drop:
+                - ALL
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
         fsGroup: 101
-
 ---
 apiVersion: v1
 kind: Service
@@ -67,12 +66,11 @@ spec:
   selector:
     app: mkdocs-docs
   ports:
-  - port: 80
-    targetPort: 8080
-    protocol: TCP
-    name: http
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
   type: ClusterIP
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -85,17 +83,17 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
 spec:
   tls:
-  - hosts:
-    - docs.skynet.local
-    secretName: mkdocs-docs-tls
+    - hosts:
+        - docs.skynet.local
+      secretName: mkdocs-docs-tls
   rules:
-  - host: docs.skynet.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: mkdocs-docs
-            port:
-              number: 80
+    - host: docs.skynet.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mkdocs-docs
+                port:
+                  number: 80
