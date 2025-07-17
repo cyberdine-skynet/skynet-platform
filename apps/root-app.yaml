@@ -20,6 +20,7 @@ spec:
     directory:
       recurse: true
       include: "**/app.yaml"
+      exclude: "argocd/**"
   syncPolicy:
     automated:
       prune: true
