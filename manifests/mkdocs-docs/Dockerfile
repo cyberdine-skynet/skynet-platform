@@ -1,5 +1,8 @@
 FROM squidfunk/mkdocs-material:latest as builder
 
+# Install extra MkDocs plugins
+RUN pip install mkdocs-macros-plugin mkdocs-glightbox
+
 # Copy the documentation source
 WORKDIR /docs
 COPY docs/ ./docs/
