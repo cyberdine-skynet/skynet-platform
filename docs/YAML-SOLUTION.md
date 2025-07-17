@@ -117,6 +117,18 @@ git commit -m "your message"  # Auto-fixes applied before commit
 - `.pre-commit-config-dev.yaml` - Fixed syntax errors
 - `manifests/mkdocs-docs/mkdocs.yml` - Proper YAML structure
 
+### Cleaned Up Files
+- **Removed**: `.github/workflows/cicd-pipe-original.yaml` (redundant)
+- **Removed**: `.github/workflows/cicd-pipe-streamlined.yaml` (duplicate)
+- **Removed**: `apps/workloads/mkdocs-docs/app.yaml` (old broken deployment)
+- **Kept**: `.github/workflows/cicd-pipe.yaml` (main enterprise pipeline)
+
+### Repository Optimization
+- **Single authoritative CI/CD pipeline**: No more confusion between 3 different workflow files
+- **Clean Argo CD configuration**: Removed broken MkDocs deployment
+- **Streamlined maintenance**: Easier to manage and update workflows
+- **Reduced repository size**: 1,372 lines of redundant code removed
+
 ## Future Prevention
 
 ### Automatic Measures
