@@ -13,6 +13,12 @@ permissions:
   pull-requests: write
   checks: write
   actions: read
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   # Stage 1: Quick Build and Basic Checks
@@ -23,6 +29,8 @@ jobs:
     outputs:
       has-dockerfile: ${{ steps.check-files.outputs.has-dockerfile }}
       has-k8s-files: ${{ steps.check-files.outputs.has-k8s-files }}
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
@@ -57,6 +65,54 @@ jobs:
             echo "has-k8s-files=false" >> $GITHUB_OUTPUT
             echo "ℹ️ No Kubernetes files found" >> build-report.md
           fi
+
+      - name: 🐳 Set up Docker Buildx
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Log in to Container Registry
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract metadata
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: 🔨 Build and push Docker image
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 📊 Update build report with image info
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        run: |
+          echo "" >> build-report.md
+          echo "### 🐳 Docker Image Build" >> build-report.md
+          echo "- **Registry:** ${{ env.REGISTRY }}" >> build-report.md
+          echo "- **Image:** ${{ env.IMAGE_NAME }}" >> build-report.md
+          echo "- **Tags:** ${{ steps.meta.outputs.tags }}" >> build-report.md
+          echo "- **Digest:** ${{ steps.build.outputs.digest }}" >> build-report.md
+          echo "- **Image URL:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> build-report.md
+          echo "✅ **Image successfully built and pushed to registry**" >> build-report.md
 
       - name: 📤 Upload build report
         uses: actions/upload-artifact@v4
@@ -202,12 +258,64 @@ jobs:
             k8s-security-report.md
             kube-linter-results.json
 
+  image-security:
+    name: 🔍 Image Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build-and-validate
+    if: needs.build-and-validate.outputs.has-dockerfile == 'true'
+    steps:
+      - name: 🔍 Run Trivy image scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ needs.build-and-validate.outputs.image-tag }}'
+          format: 'json'
+          output: 'trivy-image-results.json'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+          timeout: 5m
+
+      - name: 📊 Generate image security report
+        timeout-minutes: 2
+        run: |
+          echo "## 🔍 Container Image Security Scan" > image-security-report.md
+          echo "" >> image-security-report.md
+          echo "**Scanned Image:** \`${{ needs.build-and-validate.outputs.image-tag }}\`" >> image-security-report.md
+          echo "" >> image-security-report.md
+
+          if [ -f "trivy-image-results.json" ]; then
+            CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-image-results.json 2>/dev/null || echo "0")
+            HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' trivy-image-results.json 2>/dev/null || echo "0")
+
+            echo "### 📊 Vulnerability Summary" >> image-security-report.md
+            echo "- 🔴 Critical: $CRITICAL" >> image-security-report.md
+            echo "- 🟠 High: $HIGH" >> image-security-report.md
+
+            if [ $CRITICAL -eq 0 ] && [ $HIGH -lt 10 ]; then
+              echo "✅ **Image security check passed**" >> image-security-report.md
+              echo "🚀 **Image is safe for deployment**" >> image-security-report.md
+            else
+              echo "⚠️ **Image security review needed**" >> image-security-report.md
+              echo "🛡️ **Consider updating base image or dependencies**" >> image-security-report.md
+            fi
+          else
+            echo "⚠️ Image scan results not available" >> image-security-report.md
+          fi
+
+      - name: 📤 Upload image security report
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-security-report
+          path: |
+            image-security-report.md
+            trivy-image-results.json
+
   # Stage 3: Consolidate Results
   security-summary:
     name: 📋 Security Summary
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [build-and-validate, code-quality, filesystem-security, kubernetes-security]
+    needs: [build-and-validate, code-quality, filesystem-security, image-security, kubernetes-security]
     if: always()
     steps:
       - name: 📦 Download all reports
@@ -231,6 +339,7 @@ jobs:
           echo "|-----------|--------|" >> security-summary.md
           echo "| 📝 Code Quality | ${{ needs.code-quality.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> security-summary.md
           echo "| 🛡️ Filesystem Security | ${{ needs.filesystem-security.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> security-summary.md
+          echo "| 🔍 Image Security | ${{ needs.image-security.result == 'success' && '✅ Passed' || needs.image-security.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> security-summary.md
           echo "| ⚙️ Kubernetes Security | ${{ needs.kubernetes-security.result == 'success' && '✅ Passed' || needs.kubernetes-security.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> security-summary.md
 
           # Overall status
@@ -239,6 +348,9 @@ jobs:
             ((FAILED_JOBS++))
           fi
           if [[ "${{ needs.filesystem-security.result }}" == "failure" ]]; then
+            ((FAILED_JOBS++))
+          fi
+          if [[ "${{ needs.image-security.result }}" == "failure" ]]; then
             ((FAILED_JOBS++))
           fi
           if [[ "${{ needs.kubernetes-security.result }}" == "failure" ]]; then
@@ -252,6 +364,39 @@ jobs:
           else
             echo "⚠️ **SECURITY GATE: REVIEW NEEDED** - $FAILED_JOBS check(s) need attention" >> security-summary.md
             echo "📋 Please review the detailed reports below" >> security-summary.md
+          fi
+
+          # Add Docker image deployment info
+          echo "" >> security-summary.md
+          echo "## 🐳 Docker Image Deployment" >> security-summary.md
+          if [[ "${{ needs.build-and-validate.outputs.has-dockerfile }}" == "true" ]]; then
+            echo "| Component | Status |" >> security-summary.md
+            echo "|-----------|--------|" >> security-summary.md
+            echo "| 🔨 Image Build | ${{ needs.build-and-validate.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> security-summary.md
+            echo "| 📦 Registry Push | ${{ needs.build-and-validate.result == 'success' && '✅ Pushed' || '❌ Failed' }} |" >> security-summary.md
+            if [[ "${{ needs.build-and-validate.result }}" == "success" ]]; then
+              echo "| 🏷️ Image Tag | \`${{ needs.build-and-validate.outputs.image-tag }}\` |" >> security-summary.md
+              echo "| 📋 Registry URL | [\`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`](https://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}) |" >> security-summary.md
+              echo "" >> security-summary.md
+              echo "### 🎯 Next Steps for Argo CD Deployment" >> security-summary.md
+              echo "1. **Image Available**: ✅ Ready in registry" >> security-summary.md
+              echo "2. **Argo CD Sync**: Check Argo CD UI for automatic deployment" >> security-summary.md
+              echo "3. **Deployment Status**: Monitor pods in target namespace" >> security-summary.md
+              echo "" >> security-summary.md
+              echo "**Deployment Commands:**" >> security-summary.md
+              echo '```bash' >> security-summary.md
+              echo "# Check Argo CD applications" >> security-summary.md
+              echo "kubectl get applications -n argocd" >> security-summary.md
+              echo "" >> security-summary.md
+              echo "# Check deployment status" >> security-summary.md
+              echo "kubectl get pods --all-namespaces -l app=skynet-platform" >> security-summary.md
+              echo "" >> security-summary.md
+              echo "# Force Argo CD sync if needed" >> security-summary.md
+              echo "argocd app sync skynet-platform" >> security-summary.md
+              echo '```' >> security-summary.md
+            fi
+          else
+            echo "ℹ️ No Docker image to deploy - static configuration only" >> security-summary.md
           fi
 
           # Add detailed reports in collapsible sections
@@ -278,11 +423,41 @@ jobs:
             echo "" >> security-summary.md
           fi
 
+          if [ -f image-security-report/image-security-report.md ]; then
+            echo "<details>" >> security-summary.md
+            echo "<summary>🔍 Container Image Security Results</summary>" >> security-summary.md
+            echo "" >> security-summary.md
+            cat image-security-report/image-security-report.md >> security-summary.md
+            echo "" >> security-summary.md
+            echo "</details>" >> security-summary.md
+            echo "" >> security-summary.md
+          fi
+
           if [ -f k8s-security-report/k8s-security-report.md ]; then
             echo "<details>" >> security-summary.md
             echo "<summary>⚙️ Kubernetes Security Results</summary>" >> security-summary.md
             echo "" >> security-summary.md
             cat k8s-security-report/k8s-security-report.md >> security-summary.md
+            echo "" >> security-summary.md
+            echo "</details>" >> security-summary.md
+            echo "" >> security-summary.md
+          fi
+
+          if [ -f mkdocs-report/mkdocs-report.md ]; then
+            echo "<details>" >> security-summary.md
+            echo "<summary>📚 Documentation Deployment</summary>" >> security-summary.md
+            echo "" >> security-summary.md
+            cat mkdocs-report/mkdocs-report.md >> security-summary.md
+            echo "" >> security-summary.md
+            echo "</details>" >> security-summary.md
+            echo "" >> security-summary.md
+          fi
+
+          if [ -f image-security-report/image-security-report.md ]; then
+            echo "<details>" >> security-summary.md
+            echo "<summary>🔍 Image Security Results</summary>" >> security-summary.md
+            echo "" >> security-summary.md
+            cat image-security-report/image-security-report.md >> security-summary.md
             echo "" >> security-summary.md
             echo "</details>" >> security-summary.md
           fi
@@ -315,3 +490,124 @@ jobs:
         with:
           header: "🤖 Skynet DevSecOps Pipeline"
           path: security-summary.md
+
+  # Stage 5: Smart MkDocs Deployment (conditional)
+  mkdocs-deploy:
+    name: 📚 MkDocs Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build-and-validate]
+    if: |
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[docs]') ||
+       contains(github.event.head_commit.message, '[mkdocs]') ||
+       github.event_name == 'schedule')
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Check for documentation changes
+        id: docs-changes
+        run: |
+          echo "🔍 Checking for documentation changes..."
+
+          # Check if this is a forced deployment
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "docs-changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Manual deployment requested"
+            exit 0
+          fi
+
+          # Check if commit message indicates docs update
+          if [[ "${{ github.event.head_commit.message }}" == *"[docs]"* ]] || [[ "${{ github.event.head_commit.message }}" == *"[mkdocs]"* ]]; then
+            echo "docs-changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Documentation update detected in commit message"
+            exit 0
+          fi
+
+          # Check for file changes in documentation directories
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "")
+          if echo "$CHANGED_FILES" | grep -E "(docs/|manifests/mkdocs-docs/|mkdocs\.yml|\.md$)" >/dev/null; then
+            echo "docs-changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Documentation files changed:"
+            echo "$CHANGED_FILES" | grep -E "(docs/|manifests/mkdocs-docs/|mkdocs\.yml|\.md$)" | head -5
+          else
+            echo "docs-changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No documentation changes detected"
+          fi
+
+      - name: 🐳 Build MkDocs Container Image
+        if: steps.docs-changes.outputs.docs-changed == 'true'
+        timeout-minutes: 5
+        run: |
+          echo "🔨 Building MkDocs documentation container..."
+          cd manifests/mkdocs-docs
+
+          # Build the documentation site
+          docker build -t mkdocs-site:${{ github.sha }} .
+
+          # Test the build by extracting built files
+          docker run --rm -v "$(pwd)/test-site:/docs/site" mkdocs-site:${{ github.sha }} cp -r /docs/site /docs/
+
+          if [ -d "test-site" ] && [ "$(ls -A test-site)" ]; then
+            echo "✅ MkDocs site built successfully"
+            rm -rf test-site
+          else
+            echo "❌ MkDocs build failed"
+            exit 1
+          fi
+
+      - name: 🏷️ Tag and Push MkDocs Image
+        if: steps.docs-changes.outputs.docs-changed == 'true'
+        timeout-minutes: 3
+        run: |
+          echo "🏷️ Tagging and pushing MkDocs image..."
+
+          # Log in to container registry
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+          # Tag the image
+          MKDOCS_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mkdocs"
+          docker tag mkdocs-site:${{ github.sha }} ${MKDOCS_IMAGE}:${{ github.sha }}
+          docker tag mkdocs-site:${{ github.sha }} ${MKDOCS_IMAGE}:latest
+
+          # Push the images
+          docker push ${MKDOCS_IMAGE}:${{ github.sha }}
+          docker push ${MKDOCS_IMAGE}:latest
+
+          echo "✅ MkDocs image pushed: ${MKDOCS_IMAGE}:${{ github.sha }}"
+
+      - name: 📋 Generate MkDocs deployment report
+        if: always()
+        timeout-minutes: 1
+        run: |
+          echo "## 📚 MkDocs Documentation Deployment" > mkdocs-report.md
+          echo "" >> mkdocs-report.md
+
+          if [[ "${{ steps.docs-changes.outputs.docs-changed }}" == "true" ]]; then
+            if [[ "${{ job.status }}" == "success" ]]; then
+              echo "✅ **Documentation deployed successfully**" >> mkdocs-report.md
+              echo "- **Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mkdocs:${{ github.sha }}\`" >> mkdocs-report.md
+              echo "- **Trigger:** ${{ github.event_name }}" >> mkdocs-report.md
+              echo "- **Available at:** [Documentation Site](https://docu.fle.api64.de)" >> mkdocs-report.md
+              echo "" >> mkdocs-report.md
+              echo "🔄 **Next Steps:**" >> mkdocs-report.md
+              echo "- Argo CD will automatically detect the new image" >> mkdocs-report.md
+              echo "- Documentation will be updated within 3-5 minutes" >> mkdocs-report.md
+            else
+              echo "❌ **Documentation deployment failed**" >> mkdocs-report.md
+              echo "- Check the build logs for details" >> mkdocs-report.md
+              echo "- Verify MkDocs configuration in \`manifests/mkdocs-docs/mkdocs.yml\`" >> mkdocs-report.md
+            fi
+          else
+            echo "⏭️ **Documentation deployment skipped**" >> mkdocs-report.md
+            echo "- No documentation changes detected" >> mkdocs-report.md
+            echo "- To force deployment, use workflow_dispatch or include \`[docs]\` in commit message" >> mkdocs-report.md
+          fi
+
+      - name: 📤 Upload MkDocs report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mkdocs-report
+          path: mkdocs-report.md

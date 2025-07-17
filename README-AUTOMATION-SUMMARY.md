@@ -258,7 +258,7 @@ serves as a portfolio showcase for advanced DevOps and automation capabilities.
 
 ### Problem Solved
 - **Hanging CI/CD Pipeline**: Fixed infinite hanging issues in PR #12
-- **Complex Dependencies**: Eliminated problematic job interdependencies  
+- **Complex Dependencies**: Eliminated problematic job interdependencies
 - **No Timeouts**: Added explicit timeouts to prevent infinite execution
 - **Unreliable Execution**: Transformed to 100% reliable completion rate
 
@@ -273,7 +273,7 @@ serves as a portfolio showcase for advanced DevOps and automation capabilities.
 ```yaml
 Pipeline Structure (Fixed):
 ├── build-and-validate (15min timeout)    # Quick project detection
-├── code-quality (10min timeout)          # YAML validation  
+├── code-quality (10min timeout)          # YAML validation
 ├── filesystem-security (10min timeout)   # Trivy vulnerability scan
 ├── kubernetes-security (8min timeout)    # K8s security policies
 ├── security-summary (5min timeout)       # Report consolidation
