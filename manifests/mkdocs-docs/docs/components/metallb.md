@@ -1,18 +1,18 @@
 # MetalLB - Bare Metal Load Balancer
 
-## 📋 Overview
+## Overview
 
 MetalLB provides LoadBalancer services for bare metal Kubernetes clusters, enabling external access to services
 without cloud provider load balancers.
 
-## 🚀 Deployment Details
+## Deployment Details
 
 - **Namespace**: `metallb-system`
 - **Version**: Latest (from official Helm chart)
 - **Deployment Method**: Argo CD + Helm
 - **Mode**: L2 Advertisement (Layer 2)
 
-## 🌐 Configuration
+## Configuration
 
 ### IP Address Pool
 
@@ -41,16 +41,16 @@ spec:
   - default-pool
 ```
 
-## 📁 Configuration Files
+## Configuration Files
 
-```
+```text
 apps/workloads/metallb/app.yaml              # Helm chart deployment
 apps/workloads/metallb-config/app.yaml       # Configuration manifests
 manifests/metallb-config/ip-pool.yaml        # IP pool & L2 advertisement
 manifests/metallb-config/namespace.yaml      # Namespace with PodSecurity
 ```
 
-## 🔧 Common Commands
+## Common Commands
 
 ### Check Status
 
@@ -81,7 +81,7 @@ kubectl logs -n metallb-system deployment/metallb-controller
 kubectl logs -n metallb-system daemonset/metallb-speaker
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ### Components
 
@@ -94,7 +94,7 @@ kubectl logs -n metallb-system daemonset/metallb-speaker
 - **Failover**: Automatic failover between speaker nodes
 - **Network**: Works on single subnet without special routing
 
-## 🔐 Security Configuration
+## Security Configuration
 
 ### PodSecurity Policy
 
@@ -118,7 +118,7 @@ MetalLB requires elevated privileges for:
 - ARP/NDP packet handling
 - IP address binding
 
-## 📊 Current Allocations
+## Current Allocations
 
 | Service | Namespace | Allocated IP | Status |
 |---------|-----------|--------------|--------|
@@ -126,7 +126,7 @@ MetalLB requires elevated privileges for:
 
 Available IPs: 192.168.1.200, 192.168.1.202-192.168.1.220
 
-## 🚨 Troubleshooting Guide
+## Troubleshooting Guide
 
 ### IP Not Allocated
 
@@ -188,7 +188,7 @@ Available IPs: 192.168.1.200, 192.168.1.202-192.168.1.220
    kubectl get events -n metallb-system --sort-by='.lastTimestamp'
    ```
 
-## ⚙️ Configuration Customization
+## Configuration Customization
 
 ### Multiple IP Pools
 
@@ -240,7 +240,7 @@ spec:
   loadBalancerIP: 192.168.1.205  # Specific IP request
 ```
 
-## 🌍 Network Requirements
+## Network Requirements
 
 ### Subnet Configuration
 
@@ -257,7 +257,7 @@ Ensure the following protocols are allowed:
 - **ICMP**: For network connectivity testing
 - **Service Ports**: 80, 443, 9000, etc.
 
-## 🔄 Migration & Backup
+## Migration & Backup
 
 ### Configuration Backup
 
@@ -277,12 +277,8 @@ kubectl apply -f manifests/metallb-config/ip-pool.yaml
 kubectl get svc --all-namespaces -o wide | grep LoadBalancer
 ```
 
-## 📚 References
+## References
 
 - [MetalLB Documentation](https://metallb.universe.tf/)
 - [L2 Configuration](https://metallb.universe.tf/configuration/l2/)
 - [Troubleshooting Guide](https://metallb.universe.tf/troubleshooting/)
-
----
-
-*Part of the Skynet Platform Infrastructure*

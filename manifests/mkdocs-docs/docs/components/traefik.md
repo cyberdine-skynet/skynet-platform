@@ -1,47 +1,40 @@
 # Traefik - Ingress Controller & Load Balancer
 
-## 📋 Overview
+## Overview
 
 Traefik is our cloud-native ingress controller that provides HTTP/HTTPS routing, load balancing, and TLS
 termination for all services in the Skynet Platform.
 
-## 🚀 Deployment Details
+## Deployment Details
 
 - **Namespace**: `traefik-system`
 - **Version**: v3.1.5 (Chart: 32.1.0)
 - **Deployment Method**: Argo CD + Helm
 - **LoadBalancer IP**: 192.168.1.201 (via MetalLB)
 
-## 🌐 Access Methods
+## Access Methods
 
 ### Dashboard
 
+| Method | URL | Notes |
+|--------|-----|-------|
+| LoadBalancer | `http://192.168.1.201:9000/dashboard/` | Primary access |
+| NodePort | `http://192.168.1.175:32170/dashboard/` | Alternative access |
+| Port-Forward | `http://localhost:8080/dashboard/` | For troubleshooting |
+
+**Port-Forward Command:**
+
 ```bash
-# Via LoadBalancer
-URL: http://192.168.1.201:9000/dashboard/
-
-# Via NodePort
-URL: http://192.168.1.175:32170/dashboard/
-
-# Via Port-Forward (if external access issues)
 kubectl port-forward -n traefik-system svc/traefik 8080:9000
-URL: http://localhost:8080/dashboard/
 ```
 
 ### API Endpoints
 
-```bash
-# Routers
-http://192.168.1.201:9000/api/http/routers
+- **Routers**: `http://192.168.1.201:9000/api/http/routers`
+- **Services**: `http://192.168.1.201:9000/api/http/services`
+- **Overview**: `http://192.168.1.201:9000/api/overview`
 
-# Services
-http://192.168.1.201:9000/api/http/services
-
-# Overview
-http://192.168.1.201:9000/api/overview
-```
-
-## 🏗️ Architecture & Features
+## Architecture & Features
 
 ### Core Capabilities
 
@@ -71,14 +64,15 @@ providers:
   kubernetesCRD: enabled        # Traefik IngressRoute CRDs
 ```
 
-## 📁 Configuration Files
+## Configuration Files
 
-```
+```text
 apps/workloads/traefik/app.yaml    # Argo CD application
-# Contains Helm values configuration
 ```
 
-## 🔧 Common Commands
+Contains Helm values configuration for the Traefik deployment.
+
+## Common Commands
 
 ### Check Status
 
@@ -121,7 +115,7 @@ curl -I http://192.168.1.201
 curl -H "Host: test.local" http://192.168.1.201
 ```
 
-## 🌍 Service Exposure Examples
+## Service Exposure Examples
 
 ### Standard Kubernetes Ingress
 
@@ -172,7 +166,7 @@ spec:
     certResolver: letsencrypt
 ```
 
-## 🔐 TLS/SSL Configuration
+## TLS/SSL Configuration
 
 ### cert-manager Integration
 
@@ -196,7 +190,7 @@ certificatesResolvers:
 - **Let's Encrypt**: Automatic certificate provisioning
 - **Certificate Storage**: Persistent storage for ACME certificates
 
-## 📊 Monitoring & Metrics
+## Monitoring & Metrics
 
 ### Prometheus Metrics
 
@@ -220,7 +214,7 @@ logs:
     enabled: true
 ```
 
-## 🚨 Troubleshooting Guide
+## Troubleshooting Guide
 
 ### Service Not Accessible
 
@@ -233,10 +227,8 @@ logs:
 
 2. **Check Traefik Routing**:
 
-   ```bash
-   # Via dashboard: http://192.168.1.201:9000/dashboard/
-   # Or API: http://192.168.1.201:9000/api/http/routers
-   ```
+   Visit dashboard: `http://192.168.1.201:9000/dashboard/`
+   Or use API: `http://192.168.1.201:9000/api/http/routers`
 
 3. **Check Service Endpoints**:
 
@@ -295,7 +287,7 @@ logs:
    kubectl scale deployment traefik --replicas=2 -n traefik-system
    ```
 
-## 🔧 Configuration Customization
+## Configuration Customization
 
 ### Adding Middleware
 
@@ -317,7 +309,7 @@ ports:
     exposedPort: 8080
 ```
 
-## 🛡️ Security Features
+## Security Features
 
 - **TLS Termination**: Centralized TLS handling
 - **Security Headers**: Configurable via middleware
@@ -325,13 +317,9 @@ ports:
 - **IP Whitelisting**: Source IP filtering
 - **Basic Auth**: HTTP basic authentication
 
-## 📚 References
+## References
 
 - [Traefik Documentation](https://doc.traefik.io/traefik/)
 - [Kubernetes Ingress](https://doc.traefik.io/traefik/providers/kubernetes-ingress/)
 - [Traefik CRDs](https://doc.traefik.io/traefik/providers/kubernetes-crd/)
 - [cert-manager Integration](https://cert-manager.io/docs/configuration/acme/http01/)
-
----
-
-*Part of the Skynet Platform Infrastructure*

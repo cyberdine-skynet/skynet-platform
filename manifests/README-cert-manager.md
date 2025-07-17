@@ -2,7 +2,8 @@
 
 ## 📋 Overview
 
-cert-manager automates the management and issuance of TLS certificates from various certificate authorities, including Let's Encrypt, in Kubernetes clusters.
+cert-manager automates the management and issuance of TLS certificates from various certificate authorities,
+including Let's Encrypt, in Kubernetes clusters.
 
 ## 🚀 Deployment Details
 
@@ -15,9 +16,13 @@ cert-manager automates the management and issuance of TLS certificates from vari
 
 ### Core Components
 
-1. **cert-manager Controller**: Main certificate management logic
-2. **cert-manager Webhook**: Validates and mutates cert-manager resources
-3. **cert-manager CAInjector**: Injects CA bundles into resources
+1.
+
+**cert-manager Controller**: Main certificate management logic
+2.
+**cert-manager Webhook**: Validates and mutates cert-manager resources
+3.
+**cert-manager CAInjector**: Injects CA bundles into resources
 
 ### Certificate Workflow
 
@@ -228,19 +233,25 @@ kubectl get secret <cert-secret> -o jsonpath='{.data.tls\.crt}' | base64 -d | op
 
 ### Certificate Not Issued
 
-1. **Check ClusterIssuer Status**:
+1.
+
+**Check ClusterIssuer Status**:
 
    ```bash
    kubectl describe clusterissuer <issuer-name>
    ```
 
-2. **Check Certificate Status**:
+2.
+
+**Check Certificate Status**:
 
    ```bash
    kubectl describe certificate <cert-name> -n <namespace>
    ```
 
-3. **Check ACME Challenge**:
+3.
+
+**Check ACME Challenge**:
 
    ```bash
    kubectl get challenges --all-namespaces
@@ -249,21 +260,27 @@ kubectl get secret <cert-secret> -o jsonpath='{.data.tls\.crt}' | base64 -d | op
 
 ### ACME HTTP-01 Challenge Issues
 
-1. **Verify Ingress Configuration**:
+1.
+
+**Verify Ingress Configuration**:
 
    ```bash
    kubectl get ingress --all-namespaces
    kubectl describe ingress <ingress-name> -n <namespace>
    ```
 
-2. **Test Challenge Endpoint**:
+2.
+
+**Test Challenge Endpoint**:
 
    ```bash
    # ACME challenge is served at /.well-known/acme-challenge/
    curl http://example.com/.well-known/acme-challenge/<token>
    ```
 
-3. **Check Traefik Routing**:
+3.
+
+**Check Traefik Routing**:
 
    ```bash
    # Verify in Traefik dashboard
@@ -285,14 +302,18 @@ kubectl patch certificate <cert-name> -n <namespace> --type='merge' -p='{"spec":
 
 ### Webhook Issues
 
-1. **Check Webhook Status**:
+1.
+
+**Check Webhook Status**:
 
    ```bash
    kubectl get validatingwebhookconfiguration
    kubectl get mutatingwebhookconfiguration
    ```
 
-2. **Webhook Logs**:
+2.
+
+**Webhook Logs**:
 
    ```bash
    kubectl logs -n cert-manager deployment/cert-manager-webhook

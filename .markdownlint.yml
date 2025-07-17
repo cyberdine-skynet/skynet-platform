@@ -1,0 +1,24 @@
+# Markdown Lint Configuration for Skynet Platform
+# See: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# Default state for all rules
+default: true
+# Path-based overrides
+MD013: # Line length
+  line_length: 120
+  heading_line_length: 120
+  code_block_line_length: 120
+  stern: false
+MD033: false # Allow inline HTML (for badges, etc.)
+MD034: false # Allow bare URLs
+MD041: false # First line in file should be a top level heading
+# Allow duplicate headings (common in different sections)
+MD024:
+  siblings_only: true
+# Allow ordered lists to not start with 1
+MD029:
+  style: "ordered"
+# Allow fenced code blocks without language
+MD040: false
+# Allow emphasis used instead of heading
+MD036: false

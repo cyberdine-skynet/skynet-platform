@@ -1,0 +1,43 @@
+# Fast Pre-commit Configuration for Development
+# This runs only essential checks quickly for daily development
+
+default_stages: [commit, manual]
+fail_fast: true  # Stop on first failure
+minimum_pre_commit_version: '3.0.0'
+
+repos:
+  # Basic file cleanup (very fast)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        stages: [commit]
+      - id: end-of-file-fixer
+        stages: [commit]
+      - id: check-merge-conflict
+        stages: [commit]
+
+  # YAML validation (fast)
+    - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: ['--config-file', '.yamllint.yml']
+        stages: [manual]  # Only run manually or in CI
+
+  # Markdown linting (medium speed)
+    - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        args: ['--config', '.markdownlint.yml', '--fix']
+        exclude: 'terraform/\.terraform/.*|node_modules/.*'
+        stages: [manual]  # Only run manually or in CI
+
+  # Secrets detection (fast, critical)
+    - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        stages: [commit]  # Always run on commit

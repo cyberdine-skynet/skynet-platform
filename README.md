@@ -1,6 +1,7 @@
 # Skynet Platform
 
-A modern, production-ready GitOps infrastructure platform built on Talos OS Kubernetes with comprehensive tooling, security, and automation.
+A modern, production-ready GitOps infrastructure platform built on Talos OS Kubernetes with
+comprehensive tooling, security, and automation.
 
 ## 🎯 Platform Overview
 
@@ -76,7 +77,6 @@ skynet-platform/
     └── dependency-review.yml           # Dependency security review
 ```
 
-## 🚀 Quick Start
 ## 📚 Documentation
 
 ### Complete Guides
@@ -145,6 +145,7 @@ open http://localhost:8080/dashboard/
 ```
 
 ### 3. Verify Installation
+
 ```bash
 kubectl port-forward svc/argocd-server -n argocd 8080:80
 ```
@@ -227,7 +228,7 @@ cd terraform && terraform apply
 The repository has been cleaned of:
 
 - Old Autopilot configurations
-- Manual secrets and ConfigMaps  
+- Manual secrets and ConfigMaps
 - Outdated deployment scripts
 - Unused application directories
 

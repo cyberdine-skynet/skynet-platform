@@ -1,0 +1,31 @@
+# Fast Pre-commit Configuration for Development
+# This is a lightweight version for faster development cycles
+# Use .pre-commit-config.yaml for full CI/CD validation
+
+repos:
+  - repo: local
+    hooks:
+      - id: dev-check
+        name: Fast development checks
+        entry: scripts/dev-check.sh
+        language: script
+        pass_filenames: false
+        always_run: true
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--unsafe']
+      - id: check-merge-conflict
+
+  # Quick markdown check (faster than full markdownlint)
+  - repo: local
+    hooks:
+      - id: quick-markdown
+        name: Quick markdown line length check
+        entry: bash -c 'for file in "$@"; do awk "length(\$0) > 120 {print FILENAME \":\" NR \": Line too long\"}" "$file" || true; done'
+        language: system
+        files: '\.md$'

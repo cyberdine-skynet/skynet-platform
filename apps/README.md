@@ -2,7 +2,8 @@
 
 ## 📋 Overview
 
-Argo CD is our GitOps continuous deployment controller that automatically syncs applications from our Git repository to the Kubernetes cluster.
+Argo CD is our GitOps continuous deployment controller that automatically syncs applications from our Git repository
+to the Kubernetes cluster.
 
 ## 🚀 Deployment Details
 
@@ -154,7 +155,7 @@ syncPolicy:
    ```bash
    # Delete the secret to regenerate
    kubectl delete secret argocd-initial-admin-secret -n argocd
-   
+
    # Get new password
    kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
    ```

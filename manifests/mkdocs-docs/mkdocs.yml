@@ -1,0 +1,71 @@
+site_name: Skynet Platform Documentation
+site_description: Complete GitOps Infrastructure Platform Documentation
+site_author: Cyberdine Skynet Team
+site_url: https://docs.skynet.local
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+nav:
+    - Home: index.md
+    - Architecture:
+      - Overview: architecture/overview.md
+    - Components:
+      - Traefik: components/traefik.md
+      - MetalLB: components/metallb.md
+    - Developer Guide:
+      - Getting Started: developer/getting-started.md
+      - Deploying Applications: developer/deploying-apps.md
+    - Operations:
+      - Command Reference: operations/commands.md
+markdown_extensions:
+    - admonition
+    - attr_list
+    - codehilite:
+      guess_lang: false
+    - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+    - pymdownx.tabbed:
+      alternate_style: true
+    - pymdownx.details
+    - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+    - toc:
+      permalink: true
+    - pymdownx.tasklist:
+      custom_checkbox: true
+plugins:
+    - search
+    - git-revision-date-localized
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/cyberdine-skynet/skynet-platform
+  version:
+    provider: mike
