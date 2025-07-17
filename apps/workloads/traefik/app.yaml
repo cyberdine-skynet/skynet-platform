@@ -1,0 +1,124 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/component: networking
+spec:
+  destination:
+    namespace: traefik-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://traefik.github.io/charts
+    chart: traefik
+    targetRevision: 32.1.0
+    helm:
+      values: |
+        # Traefik Helm values for Talos OS + MetalLB
+        deployment:
+          replicas: 1
+        
+        # Use MetalLB LoadBalancer
+        service:
+          type: LoadBalancer
+          annotations:
+            metallb.universe.tf/loadBalancer-class: metallb
+        
+        # Enable dashboard
+        ingressRoute:
+          dashboard:
+            enabled: true
+            annotations:
+              traefik.ingress.kubernetes.io/router.tls: "true"
+        
+        # Ports configuration
+        ports:
+          web:
+            port: 8000
+            expose: true
+            exposedPort: 80
+          websecure:
+            port: 8443
+            expose: true
+            exposedPort: 443
+            tls:
+              enabled: true
+          traefik:
+            port: 9000
+            expose: true
+            exposedPort: 9000
+        
+        # Enable cert-manager integration
+        providers:
+          kubernetesIngress:
+            enabled: true
+            allowExternalNameServices: true
+          kubernetesCRD:
+            enabled: true
+            allowCrossNamespace: true
+            allowExternalNameServices: true
+        
+        # ACME/Let's Encrypt integration
+        certificatesResolvers:
+          letsencrypt:
+            acme:
+              email: admin@example.com  # UPDATE THIS
+              storage: /data/acme.json
+              caServer: https://acme-v02.api.letsencrypt.org/directory
+              httpChallenge:
+                entryPoint: web
+        
+        # Talos OS optimizations
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65532
+          runAsGroup: 65532
+          readOnlyRootFilesystem: true
+        
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+          limits:
+            cpu: 300m
+            memory: 150Mi
+        
+        # Node selector for control plane
+        nodeSelector:
+          node-role.kubernetes.io/control-plane: ""
+        
+        tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        
+        # Enable access logs and metrics
+        logs:
+          general:
+            level: INFO
+          access:
+            enabled: true
+        
+        metrics:
+          prometheus:
+            enabled: true
+            addEntryPointsLabels: true
+            addServicesLabels: true
+        
+        # Global redirect HTTP to HTTPS
+        globalArguments:
+        - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+        - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  revisionHistoryLimit: 10
