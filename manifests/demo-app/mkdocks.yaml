@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: docks
-          image: ghcr.io/cyberdine-skynet/skynet-platform/mkdocs:latest
+          image: ghcr.io/cyberdine-skynet/skynet-platform/gzib5h20vf2ex9kcoi8egl89h
           ports:
             - containerPort: 8080
 ---
