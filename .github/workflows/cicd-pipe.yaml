@@ -167,7 +167,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔍 Scan with kube-linter
-        uses: stackrox/kube-linter-action@v1.0.4
+        uses: stackrox/kube-linter-action@v1.0.7
         id: kube-linter
         with:
           directory: .
