@@ -84,10 +84,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - docs.skynet.local
+        - docu.fle.api64.de
       secretName: mkdocs-docs-tls # pragma: allowlist secret
   rules:
-    - host: docs.skynet.local
+    - host: docu.fle.api64.de
       http:
         paths:
           - path: /

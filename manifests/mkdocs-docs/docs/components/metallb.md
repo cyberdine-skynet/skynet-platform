@@ -11,6 +11,54 @@ without cloud provider load balancers.
 - **Version**: Latest (from official Helm chart)
 - **Deployment Method**: Argo CD + Helm
 - **Mode**: L2 Advertisement (Layer 2)
+- **Status**: ❌ **Deployed via Argo CD but NOT WORKING** - Requires complete redeployment
+
+## 🚨 IMMEDIATE ACTION REQUIRED
+
+**Current deployment is broken and needs to be completely removed and redeployed:**
+
+### Step 1: Remove Current Broken Deployment
+
+```bash
+# Delete MetalLB application from Argo CD
+kubectl delete application metallb -n argocd
+
+# Remove MetalLB namespace and all resources
+kubectl delete namespace metallb-system --force --grace-period=0
+
+# Verify complete removal
+kubectl get ns | grep metallb
+kubectl get pods --all-namespaces | grep metallb
+```
+
+### Step 2: Fresh MetalLB Deployment
+
+```bash
+# Redeploy MetalLB via Argo CD with proper configuration
+kubectl apply -f apps/workloads/metallb/app.yaml
+kubectl apply -f apps/workloads/metallb-config/app.yaml
+
+# Monitor deployment
+kubectl get applications -n argocd | grep metallb
+kubectl get pods -n metallb-system -w
+```
+
+### Step 3: Verify Working State
+
+```bash
+# Check all components are running
+kubectl get pods -n metallb-system
+kubectl get ipaddresspool -n metallb-system
+kubectl get l2advertisement -n metallb-system
+
+# Test with a LoadBalancer service
+kubectl create service loadbalancer test-lb --tcp=80:80
+kubectl get svc test-lb -o wide
+# Should show EXTERNAL-IP from pool range
+
+# Clean up test
+kubectl delete svc test-lb
+```
 
 ## Configuration
 
@@ -118,13 +166,23 @@ MetalLB requires elevated privileges for:
 - ARP/NDP packet handling
 - IP address binding
 
-## Current Allocations
+## Current Status & Issues
+
+### ⚠️ Known Issues
+
+**MetalLB is deployed via Argo CD but not functioning properly:**
+
+1. **Load Balancer Services Pending**: Services remain in "Pending" state
+2. **IP Allocation Failed**: No external IPs are being assigned
+3. **Configuration Issues**: L2 advertisement may not be working correctly
+
+### Current Allocations
 
 | Service | Namespace | Allocated IP | Status |
 |---------|-----------|--------------|--------|
-| traefik | traefik-system | 192.168.1.201 | ✅ Active |
+| traefik | traefik-system | `<Pending>` | ❌ **Not Working** |
 
-Available IPs: 192.168.1.200, 192.168.1.202-192.168.1.220
+**Available IPs**: 192.168.1.200-192.168.1.220 (All unused due to configuration issues)
 
 ## Troubleshooting Guide
 
@@ -186,6 +244,117 @@ Available IPs: 192.168.1.200, 192.168.1.202-192.168.1.220
 
    ```bash
    kubectl get events -n metallb-system --sort-by='.lastTimestamp'
+   ```
+
+## Immediate Action Items
+
+### � CRITICAL: Complete Redeployment Required
+
+**The current MetalLB deployment is broken and must be completely removed and redeployed:**
+
+1. **Delete Current Deployment**:
+   ```bash
+   # Remove from Argo CD
+   kubectl delete application metallb -n argocd
+   kubectl delete application metallb-config -n argocd
+
+   # Force remove namespace
+   kubectl delete namespace metallb-system --force --grace-period=0
+
+   # Verify clean removal
+   kubectl get ns | grep metallb
+   kubectl get crd | grep metallb
+   ```
+
+2. **Fresh Deployment**:
+   ```bash
+   # Redeploy via Argo CD
+   kubectl apply -f apps/workloads/metallb/app.yaml
+   kubectl apply -f apps/workloads/metallb-config/app.yaml
+
+   # Wait for deployment
+   kubectl wait --for=condition=available --timeout=300s deployment/metallb-controller -n metallb-system
+   ```
+
+3. **Validation Steps**:
+   ```bash
+   # Verify all pods running
+   kubectl get pods -n metallb-system
+
+   # Check configuration applied
+   kubectl get ipaddresspool,l2advertisement -n metallb-system
+
+   # Test LoadBalancer service
+   kubectl create service loadbalancer metallb-test --tcp=80:80
+   kubectl get svc metallb-test -o wide
+   # Should show EXTERNAL-IP from 192.168.1.200-220 range
+
+   # Cleanup test
+   kubectl delete svc metallb-test
+   ```
+
+### 🔧 Post-Deployment Verification
+
+1. **Verify Argo CD Deployment**:
+   ```bash
+   # Check if MetalLB is deployed via Argo CD
+   kubectl get applications -n argocd | grep metallb
+
+   # Check application status
+   kubectl describe application metallb -n argocd
+   ```
+
+2. **Validate Pod Status**:
+   ```bash
+   # Check if MetalLB pods are running
+   kubectl get pods -n metallb-system
+
+   # Check for any errors
+   kubectl describe pods -n metallb-system
+   ```
+
+3. **Configuration Validation**:
+   ```bash
+   # Verify IP pool is created
+   kubectl get ipaddresspool -n metallb-system
+
+   # Verify L2 advertisement exists
+   kubectl get l2advertisement -n metallb-system
+   ```
+
+4. **Test Service Creation**:
+   ```bash
+   # Check existing LoadBalancer services
+   kubectl get svc --all-namespaces | grep LoadBalancer
+
+   # Look for pending services
+   kubectl get svc --all-namespaces | grep Pending
+   ```
+
+### 🚨 Priority Troubleshooting Steps
+
+1. **Check MetalLB Controller Logs**:
+   ```bash
+   kubectl logs -n metallb-system deployment/metallb-controller --tail=50
+   ```
+
+2. **Check Speaker Logs**:
+   ```bash
+   kubectl logs -n metallb-system daemonset/metallb-speaker --tail=50
+   ```
+
+3. **Verify Network Configuration**:
+   ```bash
+   # Check if the IP range conflicts with existing network
+   ip route show
+   arp -a | grep 192.168.1
+   ```
+
+4. **Validate RBAC Permissions**:
+   ```bash
+   # Check if MetalLB has required permissions
+   kubectl auth can-i --list --as=system:serviceaccount:metallb-system:controller
+   kubectl auth can-i --list --as=system:serviceaccount:metallb-system:speaker
    ```
 
 ## Configuration Customization

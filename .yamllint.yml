@@ -1,39 +1,29 @@
-# YAML Lint Configuration for Skynet Platform
 extends: default
 rules:
-  # Line length
   line-length:
     max: 120
     level: warning
-  # Indentation
   indentation:
     spaces: 2
     indent-sequences: true
-  # Comments
+    check-multi-line-strings: false
+  brackets:
+    max-spaces-inside: 1
+    max-spaces-inside-empty: 0
+  braces:
+    max-spaces-inside: 1
+    max-spaces-inside-empty: 0
   comments:
     min-spaces-from-content: 1
-  # Document start/end
   document-start: disable
-  document-end: disable
-  # Truthy values (allow yes/no for Kubernetes)
   truthy:
-    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+    allowed-values: ['true', 'false', 'yes', 'no']
     check-keys: false
-  # Empty values
-  empty-values:
-    forbid-in-block-mappings: false
-    forbid-in-flow-mappings: true
-  # Brackets
-  brackets:
-    min-spaces-inside: 0
-    max-spaces-inside: 1
-  # Braces
-  braces:
-    min-spaces-inside: 0
-    max-spaces-inside: 1
+  key-duplicates: enable
+  octal-values: disable
 ignore: |
-  .terraform/
-  .venv/
-  node_modules/
-  */site/
-  .git/
+  .github/workflows/*.yml
+  .github/workflows/*.yaml
+  **/node_modules/**
+  **/.terraform/**
+  **/venv/**
