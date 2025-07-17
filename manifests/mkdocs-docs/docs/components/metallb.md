@@ -161,7 +161,7 @@ Available IPs: 192.168.1.200, 192.168.1.202-192.168.1.220
    ```bash
    # From cluster node
    ping 192.168.1.201
-   
+
    # ARP table
    arp -a | grep 192.168.1.201
    ```
@@ -201,7 +201,7 @@ spec:
   addresses:
   - 192.168.1.200-192.168.1.210
 
-# Development pool  
+# Development pool
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:

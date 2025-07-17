@@ -95,41 +95,47 @@ The Skynet Platform is a modern, cloud-native GitOps infrastructure built on Tal
 ## 🔧 Infrastructure Components
 
 ### 1. Talos OS Kubernetes Cluster
+
 - **Purpose**: Immutable, secure Kubernetes OS
 - **Node**: 192.168.1.175 (control-plane)
 - **Network**: 192.168.1.x subnet
 - **Features**: Minimal attack surface, API-driven configuration
 
 ### 2. Argo CD (GitOps Controller)
+
 - **Purpose**: Continuous deployment from Git repositories
 - **Pattern**: App-of-Apps for hierarchical application management
 - **Repository**: https://github.com/cyberdine-skynet/skynet-platform
-- **Access**: 
+- **Access**:
   - NodePort: http://192.168.1.175:30180
   - Ingress: http://argocd.fle.api64.de (via Traefik)
 
 ### 3. Traefik (Ingress Controller)
+
 - **Purpose**: HTTP/HTTPS routing, load balancing, TLS termination
 - **LoadBalancer IP**: 192.168.1.201 (via MetalLB)
 - **Dashboard**: http://192.168.1.201:9000/dashboard/
-- **Features**: 
+- **Features**:
   - Automatic HTTP→HTTPS redirect
   - cert-manager integration
   - Prometheus metrics
   - Kubernetes Ingress & CRD support
 
 ### 4. MetalLB (LoadBalancer Provider)
+
 - **Purpose**: Bare metal LoadBalancer implementation
 - **IP Pool**: 192.168.1.200-192.168.1.220
 - **Mode**: L2 Advertisement
 - **Features**: Automatic IP allocation for LoadBalancer services
 
 ### 5. cert-manager (TLS Certificate Manager)
+
 - **Purpose**: Automatic TLS certificate provisioning
 - **Issuers**: Let's Encrypt (staging & production)
 - **Features**: ACME HTTP-01 challenge, automatic renewal
 
 ### 6. SOPS + Age (Secrets Management)
+
 - **Purpose**: Encrypted secrets in Git
 - **Encryption**: Age key-based encryption
 - **Integration**: Kubernetes secrets, ConfigMaps
@@ -170,21 +176,25 @@ skynet-platform/
 ## 🚀 Installation Timeline
 
 ### Phase 1: Foundation (Completed ✅)
+
 1. **Terraform Setup** - Argo CD deployment via Helm
 2. **GitOps Bootstrap** - Connected GitHub repository
 3. **App-of-Apps Pattern** - Hierarchical application management
 
 ### Phase 2: Networking (Completed ✅)
+
 1. **MetalLB** - LoadBalancer IP pool configuration
 2. **Traefik** - Ingress controller with dashboard
 3. **cert-manager** - TLS certificate automation
 
 ### Phase 3: Security (Completed ✅)
+
 1. **SOPS Configuration** - Age-based encryption setup
 2. **Encrypted Secrets** - Secure secrets management
 3. **CI/CD Security** - TFSec and dependency scanning
 
 ### Phase 4: Applications (In Progress 🔄)
+
 1. **Demo Applications** - Test workloads
 2. **Monitoring Stack** - Prometheus, Grafana, Loki (Planned)
 3. **Authentication** - Authentik identity provider (Planned)
@@ -192,16 +202,19 @@ skynet-platform/
 ## 🔐 Security Features
 
 ### Secrets Management
+
 - **SOPS + Age encryption** for all sensitive data
 - **Kubernetes secrets** automatically decrypted
 - **No plaintext secrets** in Git repository
 
 ### Network Security
+
 - **TLS termination** at ingress level
 - **Automatic HTTP→HTTPS redirect**
 - **Let's Encrypt certificates** for production domains
 
 ### CI/CD Security
+
 - **TFSec scanning** for Terraform security issues
 - **Dependency review** for supply chain security
 - **Branch protection** rules (planned)
@@ -209,11 +222,13 @@ skynet-platform/
 ## 📈 Monitoring & Observability
 
 ### Current Metrics
+
 - **Traefik metrics** - Available at `/metrics` endpoint
 - **cert-manager metrics** - Certificate renewal status
 - **Kubernetes metrics** - Built-in cluster metrics
 
 ### Planned Monitoring
+
 - **Prometheus** - Metrics collection
 - **Grafana** - Visualization dashboards
 - **Loki** - Log aggregation
@@ -222,6 +237,7 @@ skynet-platform/
 ## 🔄 GitOps Workflow
 
 ### Branch Strategy
+
 ```
 main branch (protected)
 ├── feature/metallb-setup
@@ -231,6 +247,7 @@ main branch (protected)
 ```
 
 ### Deployment Process
+
 1. **Feature Branch** - Create branch for changes
 2. **Development** - Make infrastructure changes
 3. **Testing** - Validate in development
@@ -239,6 +256,7 @@ main branch (protected)
 6. **Sync & Health** - Monitor application status
 
 ### Argo CD Apps Health
+
 ```bash
 $ kubectl get applications -n argocd
 NAME                  SYNC STATUS   HEALTH STATUS
@@ -254,16 +272,19 @@ traefik              Synced        Healthy
 ## 🎯 Next Steps
 
 ### Immediate (Next Sprint)
+
 1. **Authentication** - Deploy Authentik identity provider
 2. **Monitoring** - Add Prometheus + Grafana stack
 3. **Documentation** - Component-specific README files
 
 ### Medium Term
+
 1. **Backup Strategy** - Velero backup solution
 2. **Service Mesh** - Istio or Linkerd integration
 3. **Multi-tenancy** - Namespace isolation
 
 ### Long Term
+
 1. **Multi-cluster** - Cluster federation
 2. **Edge Computing** - Edge node integration
 3. **AI/ML Workloads** - GPU support and ML pipelines
@@ -271,6 +292,7 @@ traefik              Synced        Healthy
 ## 🛠️ Quick Start Commands
 
 ### Access Services
+
 ```bash
 # Argo CD UI
 open http://192.168.1.175:30180
@@ -286,6 +308,7 @@ kubectl port-forward -n traefik-system svc/traefik 8080:9000
 ```
 
 ### Check Status
+
 ```bash
 # All applications
 kubectl get applications -n argocd
@@ -301,6 +324,7 @@ kubectl get ingress --all-namespaces
 ```
 
 ### Troubleshooting
+
 ```bash
 # Argo CD sync issues
 kubectl patch application <app-name> -n argocd -p '{"operation":{"sync":{}}}' --type merge

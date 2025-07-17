@@ -86,9 +86,9 @@ jobs:
         if [ -z "$NEW_TAG" ]; then
           NEW_TAG=$(echo "${{ needs.build.outputs.image-tag }}" | head -1)
         fi
-        
+
         echo "Updating deployment with image: $NEW_TAG"
-        
+
         # Update the deployment.yaml file
         sed -i "s|image: ghcr.io/cyberdine-skynet/skynet-platform-docs:.*|image: $NEW_TAG|g" manifests/mkdocs-docs/deployment.yaml
 
@@ -96,12 +96,12 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        
+
         if git diff --quiet; then
           echo "No changes to commit"
           exit 0
         fi
-        
+
         git add manifests/mkdocs-docs/deployment.yaml
         git commit -m "chore: update mkdocs image tag
 

@@ -7,7 +7,7 @@ This comprehensive example shows how to deploy a complete application to the Sky
 We'll deploy a sample **Node.js API** application with:
 
 - ✅ **GitOps deployment** via Argo CD
-- ✅ **External access** via Traefik ingress  
+- ✅ **External access** via Traefik ingress
 - ✅ **TLS certificates** via cert-manager
 - ✅ **Security best practices** applied
 - ✅ **Monitoring** integration ready
@@ -46,7 +46,7 @@ Create the directory structure for your application:
 # Create Argo CD application directory
 mkdir -p apps/workloads/sample-api
 
-# Create Kubernetes manifests directory  
+# Create Kubernetes manifests directory
 mkdir -p manifests/sample-api
 
 # Verify structure
@@ -143,7 +143,7 @@ spec:
         fsGroup: 65534
         seccompProfile:
           type: RuntimeDefault
-      
+
       containers:
       - name: api
         # Sample Node.js API image (replace with your image)
@@ -156,16 +156,16 @@ spec:
           cat > server.js << 'EOF'
           const http = require('http');
           const port = process.env.PORT || 3000;
-          
+
           const server = http.createServer((req, res) => {
             res.setHeader('Content-Type', 'application/json');
-            
+
             if (req.url === '/health') {
               res.writeHead(200);
               res.end(JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }));
             } else if (req.url === '/api/info') {
               res.writeHead(200);
-              res.end(JSON.stringify({ 
+              res.end(JSON.stringify({
                 app: 'Sample API',
                 version: '1.0.0',
                 platform: 'Skynet Platform',
@@ -174,34 +174,34 @@ spec:
               }));
             } else {
               res.writeHead(200);
-              res.end(JSON.stringify({ 
+              res.end(JSON.stringify({
                 message: 'Welcome to Skynet Platform Sample API',
                 endpoints: ['/health', '/api/info'],
                 documentation: 'https://docs.skynet.local'
               }));
             }
           });
-          
+
           server.listen(port, '0.0.0.0', () => {
             console.log(`Sample API server running on port ${port}`);
           });
           EOF
-          
+
           # Start the server
           node server.js
-        
+
         ports:
         - containerPort: 3000
           name: http
           protocol: TCP
-        
+
         # Environment variables
         env:
         - name: PORT
           value: "3000"
         - name: NODE_ENV
           value: "production"
-        
+
         # Security context for the container
         securityContext:
           allowPrivilegeEscalation: false
@@ -209,7 +209,7 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: false  # Node.js needs write access
-        
+
         # Resource limits and requests
         resources:
           requests:
@@ -218,7 +218,7 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-        
+
         # Health checks
         livenessProbe:
           httpGet:
@@ -228,7 +228,7 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
-        
+
         readinessProbe:
           httpGet:
             path: /health
@@ -276,10 +276,10 @@ metadata:
     # Traefik configuration
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    
+
     # cert-manager configuration for automatic TLS
     cert-manager.io/cluster-issuer: letsencrypt-staging
-    
+
     # Optional: Custom headers and middleware
     traefik.ingress.kubernetes.io/router.middlewares: sample-api-headers@kubernetescrd
 spec:
@@ -287,7 +287,7 @@ spec:
   - hosts:
     - api.skynet.local  # Replace with your domain
     secretName: sample-api-tls
-  
+
   rules:
   - host: api.skynet.local  # Replace with your domain
     http:

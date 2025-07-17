@@ -18,7 +18,7 @@ graph TB
         B[Infrastructure Config]
         C[Policies & RBAC]
     end
-    
+
     subgraph "Kubernetes Cluster"
         D[ArgoCD]
         E[Traefik Ingress]
@@ -26,12 +26,12 @@ graph TB
         G[cert-manager]
         H[MetalLB]
     end
-    
+
     subgraph "External"
         I[DNS Provider]
         J[Load Balancer]
     end
-    
+
     A --> D
     B --> D
     C --> D
