@@ -34,6 +34,7 @@ nav:
       - Overview: architecture/overview.md
   - Components:
       - Traefik: components/traefik.md
+      - MetalLB: components/metallb.md
   - Developer Guide:
       - Getting Started: developer/getting-started.md
       - Deploying Applications: developer/deploying-apps.md
