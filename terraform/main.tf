@@ -9,25 +9,26 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-resource "kubernetes_namespace" "cert_manager" {
-  metadata {
-    name = var.cert_manager_namespace
-    labels = {
-      "app.kubernetes.io/name"    = "cert-manager"
-      "app.kubernetes.io/part-of" = "skynet-platform"
-    }
-  }
-}
-
-resource "kubernetes_namespace" "traefik" {
-  metadata {
-    name = var.traefik_namespace
-    labels = {
-      "app.kubernetes.io/name"    = "traefik"
-      "app.kubernetes.io/part-of" = "skynet-platform"
-    }
-  }
-}
+# Temporarily commented out - focus on Argo CD only
+# resource "kubernetes_namespace" "cert_manager" {
+#   metadata {
+#     name = var.cert_manager_namespace
+#     labels = {
+#       "app.kubernetes.io/name"    = "cert-manager"
+#       "app.kubernetes.io/part-of" = "skynet-platform"
+#     }
+#   }
+# }
+# 
+# resource "kubernetes_namespace" "traefik" {
+#   metadata {
+#     name = var.traefik_namespace
+#     labels = {
+#       "app.kubernetes.io/name"    = "traefik"
+#       "app.kubernetes.io/part-of" = "skynet-platform"
+#     }
+#   }
+# }
 
 # Install Argo CD using Helm
 resource "helm_release" "argocd" {
@@ -68,12 +69,12 @@ module "secrets" {
   depends_on = [kubernetes_namespace.argocd]
 }
 
-# Deploy the root App-of-Apps
-resource "kubectl_manifest" "root_app" {
-  yaml_body = templatefile("${path.module}/../apps/root-app.yaml", {
-    github_org  = var.github_org
-    github_repo = var.github_repo
-  })
-
-  depends_on = [helm_release.argocd]
-}
+# Deploy the root App-of-Apps - TEMPORARILY DISABLED
+# resource "kubectl_manifest" "root_app" {
+#   yaml_body = templatefile("${path.module}/../apps/root-app.yaml", {
+#     github_org  = var.github_org
+#     github_repo = var.github_repo
+#   })
+# 
+#   depends_on = [helm_release.argocd]
+# }
