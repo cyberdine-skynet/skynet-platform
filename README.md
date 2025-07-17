@@ -1,109 +1,139 @@
 # Skynet Platform
 
-A Helm-based GitOps platform using Argo CD for managing Kubernetes applications and infrastructure.
+A clean, production-ready GitOps platform using Terraform and Helm to deploy Argo CD on Talos OS Kubernetes clusters.
 
 ## 🏗️ Architecture
 
-This platform uses the App-of-Apps pattern to manage multiple applications through a single root application:
+This platform follows Infrastructure as Code (IaC) and GitOps principles:
 
 ```text
 skynet-platform/
+├── terraform/                     # Infrastructure as Code
+│   ├── main.tf                   # Argo CD deployment via Helm
+│   ├── values/                   # Helm values for Argo CD
+│   └── providers.tf              # Terraform providers
 ├── apps/
-│   ├── root-app.yaml              # Root App-of-Apps
-│   ├── argocd/                    # Argo CD GitOps controller
-│   ├── cert-manager/              # Certificate management
-│   ├── traefik/                   # Ingress controller
-│   └── cluster-issuer/            # TLS certificate issuers
-├── SETUP.md                       # Setup instructions
-├── GITHUB_SSO.md                  # GitHub SSO configuration
-└── README.md
+│   ├── root-app-simple.yaml     # Root App-of-Apps
+│   └── workloads/                # Application workloads
+│       └── demo-app/             # Demo application
+├── manifests/                    # Kubernetes manifests
+│   └── demo-app/                 # Demo app deployment
+└── cleanup-argocd.sh            # Cleanup utility
 ```
 
 ## 🚀 Quick Start
 
-**Your platform is pre-configured and ready to deploy!**
+### Prerequisites
+- Talos OS Kubernetes cluster (bare metal)
+- Terraform installed
+- kubectl configured for your cluster
 
-1. **Deploy the complete platform:**
+### 1. Deploy Argo CD via Terraform
 
-   ```bash
-   ./deploy.sh
-   ```
+```bash
+cd terraform
+terraform init
+terraform apply
+```
 
-2. **Access Argo CD:**
-   - **Domain**: `https://argocd.fle.api64.de` (once DNS is configured)
-   - **NodePort**: `https://NODE_IP:30443`
-   - **Port-forward**: `kubectl port-forward svc/argocd-server -n argocd 8080:443`
+### 2. Access Argo CD
 
-3. **Login with GitHub SSO:**
-   - Use your GitHub account from the `cyberdine-skynet` organization
-   - Or use the default admin account (get password with the deploy script)
+**NodePort Access:**
+- HTTP: `http://NODE_IP:30180`
+- HTTPS: `https://NODE_IP:30543`
 
-## 📋 Applications
+**Port Forward (alternative):**
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:80
+```
 
-| Application | Namespace | Description | Wave |
-|-------------|-----------|-------------|------|
-| Argo CD | `argocd` | GitOps controller | 1 |
-| Cert-Manager | `cert-manager` | Certificate management | 2 |
-| Traefik | `traefik-system` | Ingress controller | 3 |
-| Cluster Issuer | `cert-manager` | TLS certificate issuers | 4 |
+### 3. Get Admin Password
 
-## 🔧 Configuration
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
+
+### 4. Deploy Root Application
+
+```bash
+kubectl apply -f apps/root-app-simple.yaml
+```
+
+## � Current Applications
+
+| Application | Namespace | Status | Description |
+|-------------|-----------|--------|-------------|
+| Argo CD | `argocd` | ✅ Running | GitOps controller (Terraform managed) |
+| Demo App | `demo-app` | ✅ Running | Secure nginx demo workload |
+
+## 🔧 Platform Features
 
 ### Argo CD Features
 
-- **NodePort Service**: Exposed on ports 30080 (HTTP) and 30443 (HTTPS)
-- **GitHub SSO Ready**: Pre-configured for GitHub authentication
-- **RBAC**: Role-based access control templates
-- **Monitoring**: Prometheus metrics enabled
+- **Terraform Managed**: Infrastructure as Code approach
+- **NodePort Service**: Exposed on ports 30180 (HTTP) and 30543 (HTTPS)
+- **Talos Optimized**: Security context and resource limits configured for bare metal
+- **GitOps Ready**: Connects to public GitHub repository
+- **Self-Healing**: Automatic sync and pruning enabled
 
-### Traefik Features
+### Demo Application Features
 
-- **LoadBalancer Service**: With MetalLB support
-- **Let's Encrypt**: Automatic TLS certificate management
-- **Dashboard**: Available at `traefik.fle.api64.de`
-- **High Availability**: 2 replicas with pod anti-affinity
-
-### Cert-Manager Features
-
-- **Multiple Issuers**: Let's Encrypt staging/prod and self-signed
-- **Prometheus Monitoring**: Metrics collection enabled
-- **Security**: Non-root containers with minimal privileges
+- **Security Hardened**: Non-root user, read-only filesystem, dropped capabilities
+- **Production Ready**: Health checks, resource limits, proper volume mounts
+- **Nginx Based**: Custom configuration via ConfigMap on port 8080
+- **GitOps Managed**: Deployed and synced via Argo CD
 
 ## 🔒 Security
 
-- GitHub SSO integration (see `GITHUB_SSO.md`)
-- RBAC policies for fine-grained access control
-- TLS encryption for all services
-- Security contexts and pod security standards
+- Security contexts with non-root users
+- Read-only root filesystems
+- Capability dropping (ALL capabilities removed)
+- Resource limits and requests configured
 - Network policies ready for implementation
 
-## 📚 Documentation
+## �️ Customization
 
-- [Setup Guide](SETUP.md) - Detailed deployment instructions
-- [GitHub SSO](GITHUB_SSO.md) - Single Sign-On configuration
-- [Architecture](docs/architecture.md) - System design and components
+### Argo CD Configuration
 
-## 🛠️ Customization
+Edit `terraform/values/argocd-values.yaml` to customize:
 
-Each application can be customized by editing its `values.yaml` file:
+- Resource limits and requests
+- NodePort configurations
+- Security contexts
+- Additional Argo CD features
 
-- `apps/argocd/values.yaml` - Argo CD configuration
-- `apps/traefik/values.yaml` - Traefik ingress settings
-- `apps/cert-manager/values.yaml` - Certificate manager options
+### Adding New Applications
 
-## 🔍 Monitoring
+1. Create application directory in `apps/workloads/`
+2. Add `app.yaml` with Argo CD Application definition
+3. Create manifests in `manifests/` directory
+4. Commit and push - Argo CD will auto-sync
 
-The platform includes built-in monitoring capabilities:
+## 🧹 Maintenance
 
-- Prometheus metrics for all components
-- Service monitors for metric collection
-- Dashboard access through ingress controllers
+### Clean Argo CD Installation
+
+If you need to completely reset Argo CD:
+
+```bash
+./cleanup-argocd.sh
+cd terraform && terraform apply
+```
+
+### Repository Cleanup
+
+The repository has been cleaned of:
+
+- Old Autopilot configurations
+- Manual secrets and ConfigMaps  
+- Outdated deployment scripts
+- Unused application directories
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Test your changes in a development environment
+3. Test changes in your Talos cluster
 4. Submit a pull request
 
 ## 📄 License

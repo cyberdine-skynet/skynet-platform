@@ -1,59 +1,126 @@
 # Skynet Platform Setup Guide
 
-This guide helps you deploy and configure the Helm-based GitOps setup for the Skynet platform.
+Complete setup guide for the Terraform/Helm-based GitOps platform on Talos OS.
 
 ## Prerequisites
 
-You'll need:
+- Talos OS Kubernetes cluster (bare metal)
+- Terraform ≥ 1.0
+- kubectl configured for your cluster
+- Helm 3.x (used by Terraform)
 
-1. GitHub Personal Access Token (PAT) with repo access
-2. GitHub OAuth App for SSO (optional but recommended)
-3. Your repository URL updated in root-app.yaml
+## Quick Setup
 
-## Quick Setup Commands
-
-### 1. Get initial admin password
+### 1. Deploy Argo CD Infrastructure
 
 ```bash
+cd terraform
+terraform init
+terraform apply
+```
+
+This deploys Argo CD via Helm with Talos-optimized configurations.
+
+### 2. Verify Argo CD Deployment
+
+```bash
+kubectl get pods -n argocd
+kubectl get svc -n argocd
+```
+
+### 3. Access Argo CD
+
+**NodePort (recommended for Talos):**
+
+- HTTP: `http://NODE_IP:30180`
+- HTTPS: `https://NODE_IP:30543`
+
+**Port Forward (alternative):**
+
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:80
+```
+
+### 4. Get Admin Credentials
+
+```bash
+# Get admin password
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+# Username is: admin
 ```
 
-### 2. Port forward to access Argo CD (alternative to NodePort)
+### 5. Deploy Root Application
 
 ```bash
-kubectl port-forward svc/argocd-server -n argocd 8080:443
+kubectl apply -f apps/root-app-simple.yaml
 ```
 
-### 3. Login via CLI
+### 6. Verify GitOps Setup
 
 ```bash
-argocd login localhost:8080 --username admin --password <password-from-step-1> --insecure
+# Check Argo CD applications
+kubectl get applications -n argocd
+
+# Check demo app deployment
+kubectl get pods -n demo-app
+kubectl get svc -n demo-app
 ```
 
-### 4. Add your private repository
+## Connecting to GitHub Repository
+
+1. **Login to Argo CD UI** using admin credentials
+2. **Go to Settings > Repositories**
+3. **Add Repository:**
+   - Repository URL: `https://github.com/cyberdine-skynet/skynet-platform.git`
+   - Connection Method: HTTPS
+   - Username: Your GitHub username
+   - Password: GitHub Personal Access Token
+
+## Troubleshooting
+
+### Clean Argo CD Installation
+
+If you encounter issues, use the cleanup script:
 
 ```bash
-argocd repo add https://github.com/cyberdine-skynet/skynet-platform \
-  --username your-github-username \
-  --password your-github-pat
+./cleanup-argocd.sh
+cd terraform && terraform apply
 ```
 
-### 5. Deploy the root application
+### Common Issues
+
+**Pods not starting:**
 
 ```bash
-kubectl apply -f apps/root-app.yaml
+kubectl describe pods -n argocd
+kubectl logs -n argocd -l app.kubernetes.io/name=argocd-server
 ```
 
-## Access URLs (with NodePort)
+**NodePort not accessible:**
 
-- HTTP: `http://NODE_IP:30080`
-- HTTPS: `https://NODE_IP:30443`
+```bash
+kubectl get nodes -o wide
+kubectl get svc -n argocd argocd-server
+```
 
-Replace `NODE_IP` with your Kubernetes node IP address.
+**Application sync issues:**
+
+```bash
+kubectl get applications -n argocd -o wide
+kubectl describe application skynet-root-app -n argocd
+```
 
 ## Security Notes
 
-- The current configuration uses `--insecure` for development
+- Default setup uses `--insecure` flag for HTTP access
 - For production, configure proper TLS certificates
-- Consider implementing GitHub SSO for better security
-- Regularly rotate your GitHub PAT
+- Consider implementing additional RBAC policies
+- Regularly rotate admin passwords and access tokens
+
+## Next Steps
+
+1. **Add more workloads** by creating new directories in `apps/workloads/`
+2. **Configure ingress** for external access to applications
+3. **Set up monitoring** with Prometheus and Grafana
+4. **Implement backup strategies** for cluster state
