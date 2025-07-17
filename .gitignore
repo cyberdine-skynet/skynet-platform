@@ -1,5 +1,8 @@
 # Skynet Platform GitIgnore
 
+# MkDocs generated site
+manifests/mkdocs-docs/site/
+
 # Cluster dumps and exports
 k8s-cluster-export-*
 *.tar.gz
