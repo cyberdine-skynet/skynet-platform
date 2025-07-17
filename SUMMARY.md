@@ -2,7 +2,8 @@
 
 ## 🎯 Mission Accomplished
 
-We have successfully built a complete, production-ready GitOps infrastructure platform from scratch! Here's everything we achieved:
+We have successfully built a complete, production-ready GitOps infrastructure platform from scratch! Here's
+everything we achieved:
 
 ## ✅ **What We Built**
 
@@ -224,7 +225,8 @@ This platform now supports:
 
 **The Skynet Platform is fully operational and ready for production workloads!**
 
-We have successfully transitioned from a manual Kubernetes setup to a fully automated, secure, and scalable GitOps platform that can serve as the foundation for any modern cloud-native application stack.
+We have successfully transitioned from a manual Kubernetes setup to a fully automated, secure, and scalable
+GitOps platform that can serve as the foundation for any modern cloud-native application stack.
 
 Every component is:
 

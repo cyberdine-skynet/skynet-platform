@@ -78,7 +78,9 @@ kubectl patch application <app-name> -n argocd -p '{"operation":{"sync":{}}}' --
 kubectl patch application <app-name> -n argocd -p '{"operation":{"sync":{"prune":true}}}' --type merge
 
 # Refresh application (re-read from Git)
-kubectl patch application <app-name> -n argocd -p '{"operation":{"initiatedBy":{"username":"admin"},"info":[{"name":"Reason","value":"Manual refresh"}]}}' --type merge
+kubectl patch application <app-name> -n argocd \
+  -p '{"operation":{"initiatedBy":{"username":"admin"},"info":[{"name":"Reason","value":"Manual refresh"}]}}' \
+  --type merge
 
 # Get application details
 kubectl describe application <app-name> -n argocd

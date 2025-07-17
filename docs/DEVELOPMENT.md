@@ -4,7 +4,8 @@ This document explains how to set up your development environment for the Skynet
 
 ## Pre-commit Hooks
 
-The Skynet Platform uses pre-commit hooks to ensure code quality and consistency. These hooks run automatically before each commit to catch issues early.
+The Skynet Platform uses pre-commit hooks to ensure code quality and consistency. These hooks run automatically
+before each commit to catch issues early.
 
 ### Installation
 
@@ -259,4 +260,5 @@ chore(deps): update dependencies
 - **Platform team**: #skynet-platform Slack channel
 - **Repository issues**: Create GitHub issue
 
-Remember: Pre-commit hooks are there to help maintain code quality and catch issues early. Embrace them as part of the development workflow!
+Remember: Pre-commit hooks are there to help maintain code quality and catch issues early. Embrace them as part of the
+development workflow!

@@ -93,7 +93,9 @@ kubectl patch application <app-name> -n argocd -p '{"operation":{"sync":{"prune"
 
 ```bash
 # Refresh (re-read from Git)
-kubectl patch application <app-name> -n argocd -p '{"operation":{"initiatedBy":{"username":"admin"},"info":[{"name":"Reason","value":"Manual refresh"}]}}' --type merge
+kubectl patch application <app-name> -n argocd \
+  -p '{"operation":{"initiatedBy":{"username":"admin"},"info":[{"name":"Reason","value":"Manual refresh"}]}}' \
+  --type merge
 ```
 
 **Application Information:**
@@ -280,7 +282,8 @@ kubectl get configmaps --all-namespaces -o yaml > cluster-configmaps.yaml
 kubectl apply -f argocd-applications.yaml
 
 # Force sync all applications
-kubectl get applications -n argocd -o name | xargs -I {} kubectl patch {} -n argocd -p '{"operation":{"sync":{}}}' --type merge
+kubectl get applications -n argocd -o name | \
+  xargs -I {} kubectl patch {} -n argocd -p '{"operation":{"sync":{}}}' --type merge
 ```
 
 ## Performance Monitoring

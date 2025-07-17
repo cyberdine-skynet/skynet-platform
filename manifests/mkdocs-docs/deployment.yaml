@@ -85,7 +85,7 @@ spec:
   tls:
     - hosts:
         - docs.skynet.local
-      secretName: mkdocs-docs-tls  # pragma: allowlist secret
+      secretName: mkdocs-docs-tls # pragma: allowlist secret
   rules:
     - host: docs.skynet.local
       http:
