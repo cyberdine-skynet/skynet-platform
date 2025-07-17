@@ -33,7 +33,7 @@ echo "$FILES" | while IFS= read -r file; do
     if [ -f "$file" ]; then
         # All fixes in one pass
         sed -i '' -e 's/[[:space:]]*$//' -e 's/\t/  /g' "$file"
-        
+
         # Add newline if needed
         if [ "$(tail -c1 "$file" 2>/dev/null)" != "" ]; then
             echo "" >> "$file"
@@ -47,21 +47,21 @@ echo "✅ Fixed $FILE_COUNT files in ~0.1s"
 if [ "$2" = "--validate" ]; then
     echo "🔍 Quick validation..."
     ISSUES=0
-    
+
     echo "$FILES" | while IFS= read -r file; do
         # Check for remaining tabs
         if grep -q $'\t' "$file" 2>/dev/null; then
             echo "⚠️ $file still has tabs"
             ISSUES=$((ISSUES + 1))
         fi
-        
+
         # Check for trailing whitespace
         if grep -q '[[:space:]]$' "$file" 2>/dev/null; then
             echo "⚠️ $file still has trailing whitespace"
             ISSUES=$((ISSUES + 1))
         fi
     done
-    
+
     if [ "$ISSUES" -eq 0 ]; then
         echo "✅ All issues fixed"
     fi
