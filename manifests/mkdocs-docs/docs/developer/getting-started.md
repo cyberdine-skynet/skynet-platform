@@ -69,6 +69,7 @@ spec:
 Create your application manifests in `manifests/your-app/`:
 
 **deployment.yaml**:
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -100,6 +101,7 @@ spec:
 ```
 
 **service.yaml**:
+
 ```yaml
 apiVersion: v1
 kind: Service
@@ -117,6 +119,7 @@ spec:
 ```
 
 **ingress.yaml** (if you need external access):
+
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -147,17 +150,20 @@ spec:
 ### Step 4: Commit and Deploy
 
 1. Create a feature branch:
+
    ```bash
    git checkout -b feature/deploy-your-app
    ```
 
 2. Add your files:
+
    ```bash
    git add apps/workloads/your-app/
    git add manifests/your-app/
    ```
 
 3. Commit with co-author:
+
    ```bash
    git commit -m "Deploy your-app to skynet platform
 
@@ -165,6 +171,7 @@ spec:
    ```
 
 4. Push and create pull request:
+
    ```bash
    git push origin feature/deploy-your-app
    ```

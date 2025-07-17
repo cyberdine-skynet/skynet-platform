@@ -108,6 +108,7 @@ resources:
 ```
 
 **Guidelines:**
+
 - Requests: Minimum resources needed
 - Limits: Maximum resources allowed
 - Memory limits prevent OOM kills of other pods

@@ -227,6 +227,7 @@ This platform now supports:
 We have successfully transitioned from a manual Kubernetes setup to a fully automated, secure, and scalable GitOps platform that can serve as the foundation for any modern cloud-native application stack.
 
 Every component is:
+
 - ✅ **Deployed and healthy**
 - ✅ **Documented and maintainable**
 - ✅ **Monitored and observable**
