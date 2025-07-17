@@ -255,10 +255,10 @@ chore(deps): update dependencies
 
 ### Getting Help
 
-- **Pre-commit docs**: https://pre-commit.com/
+- **Pre-commit docs**: <https://pre-commit.com/>
 - **Hook issues**: Check individual tool documentation
 - **Platform team**: #skynet-platform Slack channel
 - **Repository issues**: Create GitHub issue
 
-Remember: Pre-commit hooks are there to help maintain code quality and catch issues early. Embrace them as part of the
-development workflow!
+Remember: Pre-commit hooks are there to help maintain code quality and catch issues early. Embrace them as part of
+the development workflow!
