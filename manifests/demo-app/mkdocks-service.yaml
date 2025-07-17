@@ -1,0 +1,14 @@
+# mkdocks service block
+apiVersion: v1
+kind: Service
+metadata:
+  name: docks-service
+  namespace: docks
+spec:
+  selector:
+    app: docks
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8888
+  type: ClusterIP

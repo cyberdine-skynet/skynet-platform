@@ -4,25 +4,25 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mkdocks
+  name: docks
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mkdocks
-  namespace: mkdocks
+  name: docks
+  namespace: docks
 spec:
   selector:
     matchLabels:
-      app: mkdocks
+      app: docks
   replicas: 1
   template:
     metadata:
       labels:
-        app: mkdocks
+        app: docks
     spec:
       containers:
-        - name: mkdocks
+        - name: docks
           image: ghcr.io/cyberdine-skynet/skynet-platform/mkdocs:latest
           ports:
             - containerPort: 8080
@@ -30,11 +30,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mkdocks-service
-  namespace: mkdocks
+  name: docks-service
+  namespace: docks
 spec:
   selector:
-    app: mkdocks
+    app: docks
   ports:
     - protocol: TCP
       port: 8080
