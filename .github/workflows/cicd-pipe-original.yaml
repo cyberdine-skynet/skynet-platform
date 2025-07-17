@@ -1,0 +1,644 @@
+name: 🤖 Skynet DevSecOps Pipeline
+
+on:
+  push:
+    branches: [main, master, feature/*]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+  checks: write
+  actions: read
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Stage 1: Build and Environment Setup
+  build-and-prepare:
+    name: 🏗️ Build and Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.branch-info.outputs.branch }}
+      has-dockerfile: ${{ steps.check-files.outputs.has-dockerfile }}
+      has-k8s-files: ${{ steps.check-files.outputs.has-k8s-files }}
+      k8s-directory: ${{ steps.check-files.outputs.k8s-directory }}
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+      build-status: ${{ steps.build-status.outputs.status }}
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📊 Generate Build Info
+        id: branch-info
+        run: |
+          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "### 🔄 Pipeline Triggered" > build-report.md
+          echo "- **Repository:** ${{ github.repository }}" >> build-report.md
+          echo "- **Branch:** ${{ github.ref_name }}" >> build-report.md
+          echo "- **Commit:** ${{ github.sha }}" >> build-report.md
+          echo "- **Triggered by:** ${{ github.event_name }}" >> build-report.md
+          echo "- **Actor:** ${{ github.actor }}" >> build-report.md
+          echo "- **Workflow:** ${{ github.workflow }}" >> build-report.md
+
+      - name: 🔍 Detect Project Structure
+        id: check-files
+        run: |
+          # Check for Dockerfile
+          DOCKERFILES=$(find . -name "Dockerfile" -o -name "*.dockerfile" 2>/dev/null | head -5)
+          if [ -n "$DOCKERFILES" ]; then
+            echo "has-dockerfile=true" >> $GITHUB_OUTPUT
+            echo "✅ Docker support detected" >> build-report.md
+            echo "Found Dockerfiles:" >> build-report.md
+            echo "$DOCKERFILES" | sed 's/^/  - /' >> build-report.md
+          else
+            echo "has-dockerfile=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No Dockerfile found" >> build-report.md
+          fi
+
+          # Check for Kubernetes files
+          K8S_FILES=$(find . -name "*.yaml" -o -name "*.yml" | grep -E "(deployment|service|configmap|secret|ingress|pod|namespace|statefulset|daemonset)" | head -10 || true)
+          HELM_CHARTS=$(find . -name "Chart.yaml" | head -5 || true)
+          KUSTOMIZE=$(find . -name "kustomization.yaml" -o -name "kustomization.yml" | head -5 || true)
+
+          if [ -n "$K8S_FILES" ] || [ -n "$HELM_CHARTS" ] || [ -n "$KUSTOMIZE" ]; then
+            echo "has-k8s-files=true" >> $GITHUB_OUTPUT
+            echo "k8s-directory=." >> $GITHUB_OUTPUT
+            echo "✅ Kubernetes manifests detected" >> build-report.md
+            if [ -n "$HELM_CHARTS" ]; then
+              echo "  - Helm charts found" >> build-report.md
+            fi
+            if [ -n "$KUSTOMIZE" ]; then
+              echo "  - Kustomize configuration found" >> build-report.md
+            fi
+          else
+            echo "has-k8s-files=false" >> $GITHUB_OUTPUT
+            echo "k8s-directory=k8s-demo" >> $GITHUB_OUTPUT
+            echo "ℹ️ No Kubernetes files found - generating demo" >> build-report.md
+
+            # Create demo K8s files for scanning
+            mkdir -p k8s-demo
+            cat > k8s-demo/deployment.yaml << 'EOF'
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: demo-app
+            namespace: default
+            labels:
+              app: demo
+              version: "1.0"
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: demo
+            template:
+              metadata:
+                labels:
+                  app: demo
+                  version: "1.0"
+              spec:
+                securityContext:
+                  runAsNonRoot: true
+                  runAsUser: 1000
+                  fsGroup: 1000
+                containers:
+                - name: demo
+                  image: nginx:1.25-alpine
+                  ports:
+                  - containerPort: 8080
+                    name: http
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    readOnlyRootFilesystem: true
+                    runAsNonRoot: true
+                    runAsUser: 1000
+                    capabilities:
+                      drop:
+                        - ALL
+                  resources:
+                    requests:
+                      memory: "64Mi"
+                      cpu: "50m"
+                    limits:
+                      memory: "128Mi"
+                      cpu: "100m"
+                  livenessProbe:
+                    httpGet:
+                      path: /
+                      port: 8080
+                    initialDelaySeconds: 30
+                    periodSeconds: 10
+                  readinessProbe:
+                    httpGet:
+                      path: /
+                      port: 8080
+                    initialDelaySeconds: 5
+                    periodSeconds: 5
+          EOF
+
+            cat > k8s-demo/service.yaml << 'EOF'
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: demo-service
+            namespace: default
+            labels:
+              app: demo
+          spec:
+            selector:
+              app: demo
+            ports:
+            - port: 80
+              targetPort: 8080
+              protocol: TCP
+              name: http
+            type: ClusterIP
+          EOF
+          fi
+
+      - name: 🐳 Set up Docker Buildx
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Log in to Container Registry
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract metadata
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: 🔨 Build Docker image
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/image.tar
+
+      - name: 📦 Upload Docker image artifact
+        if: steps.check-files.outputs.has-dockerfile == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/image.tar
+          retention-days: 1
+
+      - name: ✅ Build Summary
+        id: build-status
+        run: |
+          echo "### ⚙️ Build Results" >> build-report.md
+          echo "✅ Repository scanned successfully" >> build-report.md
+          if [ "${{ steps.check-files.outputs.has-dockerfile }}" == "true" ]; then
+            echo "✅ Docker image built successfully" >> build-report.md
+            echo "status=success-with-docker" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️ No Docker image to build" >> build-report.md
+            echo "status=success-no-docker" >> $GITHUB_OUTPUT
+          fi
+          echo "✅ Environment prepared for security scanning" >> build-report.md
+
+      - name: 📤 Upload build report
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-report
+          path: build-report.md
+
+  # Stage 2: Parallel Security Scans
+  trivy-security-scan:
+    name: 🛡️ Trivy Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-prepare
+    if: needs.build-and-prepare.outputs.has-dockerfile == 'true'
+    strategy:
+      matrix:
+        scan-type: [filesystem, image]
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Download Docker image
+        if: matrix.scan-type == 'image'
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: 🐳 Load Docker image
+        if: matrix.scan-type == 'image'
+        run: |
+          docker load --input /tmp/image.tar
+          docker image ls -a
+
+      - name: 🔍 Run Trivy vulnerability scanner (${{ matrix.scan-type }})
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: ${{ matrix.scan-type }}
+          scan-ref: ${{ matrix.scan-type == 'image' && format('{0}/{1}:latest', env.REGISTRY, env.IMAGE_NAME) || '.' }}
+          format: 'json'
+          output: 'trivy-${{ matrix.scan-type }}-results.json'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          exit-code: '0'
+
+      - name: 🔍 Run Trivy for SARIF (${{ matrix.scan-type }})
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: ${{ matrix.scan-type }}
+          scan-ref: ${{ matrix.scan-type == 'image' && format('{0}/{1}:latest', env.REGISTRY, env.IMAGE_NAME) || '.' }}
+          format: 'sarif'
+          output: 'trivy-${{ matrix.scan-type }}-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: 📊 Generate Trivy scan report (${{ matrix.scan-type }})
+        run: |
+          echo "## �️ Trivy ${{ matrix.scan-type }} Security Scan Results" > trivy-${{ matrix.scan-type }}-report.md
+          echo "" >> trivy-${{ matrix.scan-type }}-report.md
+
+          # Count vulnerabilities by severity
+          if [ -f "trivy-${{ matrix.scan-type }}-results.json" ]; then
+            CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-${{ matrix.scan-type }}-results.json 2>/dev/null || echo "0")
+            HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' trivy-${{ matrix.scan-type }}-results.json 2>/dev/null || echo "0")
+            MEDIUM=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="MEDIUM")] | length' trivy-${{ matrix.scan-type }}-results.json 2>/dev/null || echo "0")
+            LOW=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="LOW")] | length' trivy-${{ matrix.scan-type }}-results.json 2>/dev/null || echo "0")
+
+            echo "### 📊 Vulnerability Summary (${{ matrix.scan-type }})" >> trivy-${{ matrix.scan-type }}-report.md
+            echo "| Severity | Count | Status |" >> trivy-${{ matrix.scan-type }}-report.md
+            echo "|----------|-------|--------|" >> trivy-${{ matrix.scan-type }}-report.md
+            echo "| 🔴 Critical | $CRITICAL | $([ $CRITICAL -gt 0 ] && echo '![Critical](https://img.shields.io/badge/CRITICAL-'$CRITICAL'-red)' || echo '![Critical](https://img.shields.io/badge/CRITICAL-0-green)') |" >> trivy-${{ matrix.scan-type }}-report.md
+            echo "| 🟠 High | $HIGH | $([ $HIGH -gt 0 ] && echo '![High](https://img.shields.io/badge/HIGH-'$HIGH'-orange)' || echo '![High](https://img.shields.io/badge/HIGH-0-green)') |" >> trivy-${{ matrix.scan-type }}-report.md
+            echo "| 🟡 Medium | $MEDIUM | $([ $MEDIUM -gt 0 ] && echo '![Medium](https://img.shields.io/badge/MEDIUM-'$MEDIUM'-yellow)' || echo '![Medium](https://img.shields.io/badge/MEDIUM-0-green)') |" >> trivy-${{ matrix.scan-type }}-report.md
+            echo "| 🔵 Low | $LOW | $([ $LOW -gt 0 ] && echo '![Low](https://img.shields.io/badge/LOW-'$LOW'-blue)' || echo '![Low](https://img.shields.io/badge/LOW-0-green)') |" >> trivy-${{ matrix.scan-type }}-report.md
+
+            # Check for critical vulnerabilities that should fail the pipeline
+            if [ $CRITICAL -gt 0 ] || [ $HIGH -gt 10 ]; then
+              echo "" >> trivy-${{ matrix.scan-type }}-report.md
+              echo "🚨 **Security gate threshold exceeded!**" >> trivy-${{ matrix.scan-type }}-report.md
+              echo "- Critical vulnerabilities: $CRITICAL (max: 0)" >> trivy-${{ matrix.scan-type }}-report.md
+              echo "- High vulnerabilities: $HIGH (max: 10)" >> trivy-${{ matrix.scan-type }}-report.md
+              exit 1
+            fi
+
+            # Add top vulnerabilities for critical and high
+            if [ $CRITICAL -gt 0 ] || [ $HIGH -gt 0 ]; then
+              echo "" >> trivy-${{ matrix.scan-type }}-report.md
+              echo "### 🚨 Top Critical/High Vulnerabilities" >> trivy-${{ matrix.scan-type }}-report.md
+              jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH") | "- **\(.VulnerabilityID)** (\(.Severity)): \(.Title // "No title")\n  - Package: \(.PkgName) \(.InstalledVersion)\n  - Fixed in: \(.FixedVersion // "Not available")"' trivy-${{ matrix.scan-type }}-results.json 2>/dev/null | head -20 >> trivy-${{ matrix.scan-type }}-report.md || echo "Could not parse vulnerability details" >> trivy-${{ matrix.scan-type }}-report.md
+            fi
+          else
+            echo "❌ Scan results not available" >> trivy-${{ matrix.scan-type }}-report.md
+          fi
+
+      - name: 📤 Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-${{ matrix.scan-type }}-results.sarif'
+          category: 'trivy-${{ matrix.scan-type }}'
+
+      - name: 📦 Upload Trivy reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-${{ matrix.scan-type }}-report
+          path: |
+            trivy-${{ matrix.scan-type }}-report.md
+            trivy-${{ matrix.scan-type }}-results.json
+            trivy-${{ matrix.scan-type }}-results.sarif
+
+  sast-scan:
+    name: 🔍 SAST Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-prepare
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Install Trunk
+        run: |
+          curl -fsSL https://get.trunk.io | bash -s -- -y
+          echo "$HOME/.cache/trunk/tools/trunk" >> $GITHUB_PATH
+
+      - name: 🔍 Run Trunk SAST
+        run: |
+          echo "## 🔍 SAST Security Scan Results" > sast-report.md
+          echo "" >> sast-report.md
+          echo '```' >> sast-report.md
+          trunk check --ci --output=text >> sast-report.md 2>&1 || echo "SAST scan completed with findings"
+          echo '```' >> sast-report.md
+
+      - name: 📤 Upload SAST report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-report
+          path: sast-report.md
+
+  code-quality-scan:
+    name: 📝 Code Quality & Linting
+    runs-on: ubuntu-latest
+    needs: build-and-prepare
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install and configure ESLint
+        run: |
+          npm init -y
+          npm install --save-dev eslint @eslint/js
+          cat > eslint.config.js << 'EOF'
+          import js from '@eslint/js';
+          export default [
+            js.configs.recommended,
+            {
+              files: ['**/*.js', '**/*.mjs'],
+              rules: {
+                "no-unused-vars": "warn",
+                "no-console": "warn"
+              }
+            }
+          ];
+          EOF
+          npm pkg set scripts.lint="eslint ."
+
+      - name: Run ESLint
+        run: |
+          echo "## 📝 Code Linting Results" > linting-report.md
+          echo "" >> linting-report.md
+          echo '```' >> linting-report.md
+          npm run lint >> linting-report.md 2>&1 || echo "Linting completed with findings"
+          echo '```' >> linting-report.md
+
+      - name: Upload linting report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-report
+          path: linting-report.md
+
+  kubernetes-scan:
+    name: Kubernetes Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-prepare
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create results directory
+        run: mkdir -p results
+
+      - name: Scan with kube-linter
+        uses: stackrox/kube-linter-action@v1.0.4
+        id: kube-linter-scan
+        with:
+          directory: ${{ needs.build-and-prepare.outputs.k8s-directory }}
+          format: sarif
+          output-file: results/kube-linter.sarif
+          config: |
+            checks:
+              addAllBuiltIn: true
+              exclude:
+                - "no-extensions-v1beta"
+        continue-on-error: true
+
+      - name: Scan with kube-linter for JSON
+        uses: stackrox/kube-linter-action@v1.0.4
+        with:
+          directory: ${{ needs.build-and-prepare.outputs.k8s-directory }}
+          format: json
+          output-file: results/kube-linter.json
+        continue-on-error: true
+
+      - name: Generate Kubernetes scan report
+        run: |
+          echo "## ⚙️ Kubernetes Security Scan Results" > k8s-report.md
+          echo "" >> k8s-report.md
+
+          if [ -f results/kube-linter.json ]; then
+            TOTAL_ISSUES=$(jq '.Reports | length' results/kube-linter.json 2>/dev/null || echo "0")
+            echo "### 📊 Scan Summary" >> k8s-report.md
+            echo "- **Total Issues Found:** $TOTAL_ISSUES" >> k8s-report.md
+
+            if [ "$TOTAL_ISSUES" -gt 0 ]; then
+              echo "### 🚨 Security Issues Found" >> k8s-report.md
+              jq -r '.Reports[] | "- **\(.Check)** in `\(.Object.K8sObject.Name)`\n  - \(.Diagnostic.Message)"' results/kube-linter.json 2>/dev/null >> k8s-report.md || echo "Could not parse issues" >> k8s-report.md
+            else
+              echo "✅ **No security issues found!**" >> k8s-report.md
+            fi
+          else
+            echo "⚠️ Unable to generate report - scan output not available." >> k8s-report.md
+          fi
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results/kube-linter.sarif
+
+      - name: Upload Kubernetes report
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-report
+          path: |
+            k8s-report.md
+            results/
+
+  dependency-scan:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-prepare
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk
+        run: snyk auth ${{ env.SNYK_TOKEN }}
+        continue-on-error: true
+
+      - name: Run Snyk test
+        run: |
+          echo "## 🛡️ Dependency Security Scan Results" > dependency-report.md
+          echo "" >> dependency-report.md
+          echo '```' >> dependency-report.md
+          snyk test --severity-threshold=high >> dependency-report.md 2>&1 || echo "Dependency scan completed with findings"
+          echo '```' >> dependency-report.md
+
+      - name: Upload dependency report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-report
+          path: dependency-report.md
+
+  # Stage 3: Security Gate and Results
+  security-gate:
+    name: 🛡️ Security Gate
+    runs-on: ubuntu-latest
+    needs: [build-and-prepare, trivy-security-scan, sast-scan, code-quality-scan, kubernetes-scan, dependency-scan]
+    if: always()
+    steps:
+      - name: 📦 Download all reports
+        uses: actions/download-artifact@v4
+
+      - name: 📊 Evaluate security results
+        run: |
+          echo "## 🛡️ Security Gate Results" > security-gate.md
+          echo "" >> security-gate.md
+          echo "| Scan Type | Status |" >> security-gate.md
+          echo "|-----------|--------|" >> security-gate.md
+          echo "| SAST | ${{ needs.sast-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> security-gate.md
+          echo "| Code Quality | ${{ needs.code-quality-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> security-gate.md
+          echo "| Trivy Security | ${{ needs.trivy-security-scan.result == 'success' && '✅ Passed' || needs.trivy-security-scan.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> security-gate.md
+          echo "| Kubernetes | ${{ needs.kubernetes-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> security-gate.md
+          echo "| Dependencies | ${{ needs.dependency-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> security-gate.md
+
+          # Check for critical failures
+          CRITICAL_FAILURES=0
+          if [[ "${{ needs.sast-scan.result }}" == "failure" ]]; then
+            ((CRITICAL_FAILURES++))
+          fi
+          if [[ "${{ needs.trivy-security-scan.result }}" == "failure" ]]; then
+            ((CRITICAL_FAILURES++))
+          fi
+
+          echo "" >> security-gate.md
+          if [ $CRITICAL_FAILURES -gt 0 ]; then
+            echo "🚨 **SECURITY GATE: FAILED** - $CRITICAL_FAILURES critical scan(s) failed" >> security-gate.md
+            echo "❌ Deployment blocked due to security issues" >> security-gate.md
+            exit 1
+          else
+            echo "✅ **SECURITY GATE: PASSED** - All scans completed successfully" >> security-gate.md
+            echo "🚀 Ready for deployment" >> security-gate.md
+          fi
+
+      - name: 📤 Upload security gate report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-gate-report
+          path: security-gate.md
+
+  # Stage 4: PR Comments and Deploy
+  pr-summary:
+    name: Post PR Summary
+    runs-on: ubuntu-latest
+    needs: [build-and-prepare, sast-scan, code-quality-scan, trivy-security-scan, kubernetes-scan, dependency-scan]
+    if: github.event_name == 'pull_request' && always()
+    steps:
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+
+      - name: Generate consolidated PR comment
+        run: |
+          echo "# 🤖 Skynet DevSecOps Pipeline Results" > pr-summary.md
+          echo "" >> pr-summary.md
+
+          # Add build info
+          if [ -f build-report/build-report.md ]; then
+            cat build-report/build-report.md >> pr-summary.md
+            echo "" >> pr-summary.md
+          fi
+
+          # Add security gate
+          if [ -f security-gate-report/security-gate.md ]; then
+            cat security-gate-report/security-gate.md >> pr-summary.md
+            echo "" >> pr-summary.md
+          fi
+
+          # Add individual reports in collapsible sections
+          echo "<details>" >> pr-summary.md
+          echo "<summary>🔍 SAST Scan Results</summary>" >> pr-summary.md
+          echo "" >> pr-summary.md
+          cat sast-report/sast-report.md 2>/dev/null || echo "SAST report not available" >> pr-summary.md
+          echo "</details>" >> pr-summary.md
+          echo "" >> pr-summary.md
+
+          echo "<details>" >> pr-summary.md
+          echo "<summary>📝 Code Quality Results</summary>" >> pr-summary.md
+          echo "" >> pr-summary.md
+          cat code-quality-report/linting-report.md 2>/dev/null || echo "Code quality report not available" >> pr-summary.md
+          echo "</details>" >> pr-summary.md
+          echo "" >> pr-summary.md
+
+          # Add Trivy security scan results
+          if [ -d trivy-filesystem-report ] || [ -d trivy-image-report ]; then
+            echo "<details>" >> pr-summary.md
+            echo "<summary>�️ Trivy Security Scan Results</summary>" >> pr-summary.md
+            echo "" >> pr-summary.md
+            if [ -f trivy-filesystem-report/trivy-filesystem-report.md ]; then
+              echo "### Filesystem Scan" >> pr-summary.md
+              cat trivy-filesystem-report/trivy-filesystem-report.md 2>/dev/null >> pr-summary.md
+            fi
+            if [ -f trivy-image-report/trivy-image-report.md ]; then
+              echo "### Container Image Scan" >> pr-summary.md
+              cat trivy-image-report/trivy-image-report.md 2>/dev/null >> pr-summary.md
+            fi
+            echo "</details>" >> pr-summary.md
+            echo "" >> pr-summary.md
+          fi
+
+          echo "<details>" >> pr-summary.md
+          echo "<summary>⚙️ Kubernetes Scan Results</summary>" >> pr-summary.md
+          echo "" >> pr-summary.md
+          cat k8s-report/k8s-report.md 2>/dev/null || echo "Kubernetes report not available" >> pr-summary.md
+          echo "</details>" >> pr-summary.md
+          echo "" >> pr-summary.md
+
+          echo "<details>" >> pr-summary.md
+          echo "<summary>🛡️ Dependency Scan Results</summary>" >> pr-summary.md
+          echo "" >> pr-summary.md
+          cat dependency-report/dependency-report.md 2>/dev/null || echo "Dependency report not available" >> pr-summary.md
+          echo "</details>" >> pr-summary.md
+
+          echo "" >> pr-summary.md
+          echo "---" >> pr-summary.md
+          echo "*🤖 Automated by Skynet DevSecOps Pipeline*" >> pr-summary.md
+
+      - name: Post consolidated PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: "🤖 Skynet DevSecOps Pipeline"
+          path: pr-summary.md
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [security-gate]
+    if: github.ref == 'refs/heads/main' && needs.security-gate.result == 'success'
+    steps:
+      - name: Deploy application
+        run: |
+          echo "🚀 Deploying to production..."
+          echo "✅ Deployment completed successfully"

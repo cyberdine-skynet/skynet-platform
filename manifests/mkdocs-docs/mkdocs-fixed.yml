@@ -3,6 +3,7 @@ site_description: Complete infrastructure and application deployment guide
 site_url: https://docu.fle.api64.de
 repo_url: https://github.com/cyberdine-skynet/skynet-platform
 repo_name: cyberdine-skynet/skynet-platform
+
 theme:
   name: material
   palette:
@@ -27,6 +28,7 @@ theme:
     - search.share
     - content.code.copy
     - content.code.annotate
+
 nav:
   - Home: index.md
   - Architecture:
@@ -39,6 +41,7 @@ nav:
       - Deploying Applications: developer/deploying-apps.md
   - Operations:
       - Command Reference: operations/commands.md
+
 markdown_extensions:
   - admonition
   - attr_list
@@ -59,9 +62,11 @@ markdown_extensions:
       permalink: true
   - pymdownx.tasklist:
       custom_checkbox: true
+
 plugins:
   - search
   - git-revision-date-localized
+
 extra:
   social:
     - icon: fontawesome/brands/github

@@ -17,7 +17,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
-        args: ['--unsafe']
+        args: ["--unsafe"]
       - id: check-merge-conflict
   # Quick markdown check (faster than full markdownlint)
   - repo: local
