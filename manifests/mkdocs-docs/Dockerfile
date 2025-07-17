@@ -1,4 +1,4 @@
-FROM squidfunk/mkdocs-material:latest AS builder
+FROM squidfunk/mkdocs-material:latest as builder
 
 # Copy the documentation source
 WORKDIR /docs
