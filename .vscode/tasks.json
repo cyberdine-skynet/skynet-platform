@@ -1,0 +1,314 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Git: Status",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"status"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Git: Add All Changes",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"."
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Git: Commit with Message",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"${input:commitMessage}"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Git: Push to Remote",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Git: Pull from Remote",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"pull"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Git: Add + Commit + Push",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"Git: Add All Changes",
+				"Git: Commit with Message",
+				"Git: Push to Remote"
+			],
+			"group": "build",
+			"isBackground": false
+		},
+		{
+			"label": "Git: Show Diff",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"diff"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Git: Show Log (oneline)",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"log",
+				"--oneline",
+				"-10"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Git: Show Current Branch",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"branch",
+				"--show-current"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Git: Reset Hard (DANGER)",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"reset",
+				"--hard",
+				"HEAD"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Kubectl: Get Applications",
+			"type": "shell",
+			"command": "kubectl",
+			"args": [
+				"get",
+				"applications",
+				"-n",
+				"argocd"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Kubectl: Get Pods (ArgoCD)",
+			"type": "shell",
+			"command": "kubectl",
+			"args": [
+				"get",
+				"pods",
+				"-n",
+				"argocd"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Kubectl: Get All Namespaces",
+			"type": "shell",
+			"command": "kubectl",
+			"args": [
+				"get",
+				"namespaces"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "ArgoCD: Port Forward",
+			"type": "shell",
+			"command": "kubectl",
+			"args": [
+				"port-forward",
+				"service/argocd-server",
+				"-n",
+				"argocd",
+				"8080:443"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": true
+		},
+		{
+			"label": "ArgoCD: Get Admin Password",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"-c",
+				"kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d && echo"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Deploy: Run Deployment Script",
+			"type": "shell",
+			"command": "./deploy.sh",
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Auto-fix: Fix Code Quality Issues",
+			"type": "shell",
+			"command": "./scripts/auto-fix.sh",
+			"group": "build",
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			},
+			"isBackground": false
+		},
+		{
+			"label": "Quick Check: Validate Code Quality",
+			"type": "shell",
+			"command": "./scripts/quick-check.sh",
+			"group": "test",
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			},
+			"isBackground": false
+		},
+		{
+			"label": "Smart Commit: Auto-fix and Commit",
+			"type": "shell",
+			"command": "./scripts/smart-commit.sh",
+			"args": [
+				"${input:commitMessage}"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared"
+			},
+			"isBackground": false
+		},
+		{
+			"label": "Auto-fix on Save (Watch Mode)",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"-c",
+				"echo 'Watching for file changes...' && fswatch -o . --exclude='.git' --exclude='node_modules' | while read f; do echo 'Files changed, running auto-fix...'; ./scripts/auto-fix.sh; done"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "silent",
+				"focus": false,
+				"panel": "dedicated"
+			},
+			"isBackground": true
+		},
+		{
+			"label": "Validate and Auto-fix Pipeline",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"Quick Check: Validate Code Quality",
+				"Auto-fix: Fix Code Quality Issues",
+				"Quick Check: Validate Code Quality"
+			],
+			"group": "build",
+			"isBackground": false
+		},
+		{
+			"label": "⚡ Fast Fix - Staged Files",
+			"type": "shell",
+			"command": "./scripts/fast-fix.sh",
+			"args": ["staged"],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": true
+			}
+		},
+		{
+			"label": "⚡ Fast Fix - All Modified",
+			"type": "shell",
+			"command": "./scripts/fast-fix.sh",
+			"args": ["modified", "--validate"],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": true
+			}
+		}
+	],
+	"inputs": [
+		{
+			"id": "commitMessage",
+			"description": "Commit message",
+			"default": "Update configuration",
+			"type": "promptString"
+		}
+	]
+}
