@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mkdocks
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mkdocks
+  namespace: mkdocks
+spec:
+  selector:
+    matchLabels:
+      app: mkdocks
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mkdocks
+    spec:
+      containers:
+        - name: mkdocks
+          image: ghcr.io/cyberdine-skynet/skynet-platform/mkdocs:latest
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mkdocks-service
+  namespace: mkdocks
+spec:
+  selector:
+    app: mkdocks
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8888
+  type: ClusterIP
