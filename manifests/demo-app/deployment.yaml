@@ -19,14 +19,14 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
-        runAsUser: 65534
-        runAsGroup: 65534
-        fsGroup: 65534
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
       containers:
         - name: demo-app
           image: nginx:1.25-alpine
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               name: http
           env:
             - name: ENVIRONMENT
@@ -43,7 +43,7 @@ spec:
             capabilities:
               drop:
                 - ALL
-            readOnlyRootFilesystem: false
+            readOnlyRootFilesystem: true
           volumeMounts:
             - name: tmp-volume
               mountPath: /tmp
@@ -51,16 +51,18 @@ spec:
               mountPath: /var/cache/nginx
             - name: var-run-volume
               mountPath: /var/run
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
           readinessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 15
             periodSeconds: 20
       volumes:
@@ -70,6 +72,31 @@ spec:
           emptyDir: {}
         - name: var-run-volume
           emptyDir: {}
+        - name: nginx-conf
+          configMap:
+            name: nginx-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: demo-app
+data:
+  default.conf: |
+    server {
+        listen 8080;
+        server_name localhost;
+        
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+        }
+        
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+    }
 ---
 apiVersion: v1
 kind: Service
@@ -82,7 +109,7 @@ spec:
   type: ClusterIP
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
       protocol: TCP
       name: http
   selector:
