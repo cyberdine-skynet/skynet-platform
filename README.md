@@ -1,6 +1,7 @@
 # Skynet Platform
 
-A modern, production-ready GitOps infrastructure platform built on Talos OS Kubernetes with comprehensive tooling, security, and automation.
+A modern, production-ready GitOps infrastructure platform built on Talos OS Kubernetes with
+comprehensive tooling, security, and automation.
 
 ## 🎯 Platform Overview
 
@@ -75,8 +76,6 @@ skynet-platform/
     ├── tfsec.yml                       # Terraform security scanning
     └── dependency-review.yml           # Dependency security review
 ```
-
-## 🚀 Quick Start
 
 ## 📚 Documentation
 

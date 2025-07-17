@@ -6,7 +6,8 @@
 # packages will be blocked from merging.
 #
 # Source repository: https://github.com/actions/dependency-review-action
-# Public documentation: https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review#dependency-review-enforcement
+# Public documentation:
+# https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review#dependency-review-enforcement
 name: 'Dependency review'
 on:
   pull_request:
@@ -17,10 +18,12 @@ on:
 # permissions:
 #   contents: write
 #
-# https://docs.github.com/en/enterprise-cloud@latest/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api
+# https://docs.github.com/en/enterprise-cloud@latest/code-security/supply-chain-security/
+# understanding-your-software-supply-chain/using-the-dependency-submission-api
 permissions:
   contents: read
-  # Write permissions for pull-requests are required for using the `comment-summary-in-pr` option, comment out if you aren't using this option
+  # Write permissions for pull-requests are required for using the `comment-summary-in-pr` option,
+  # comment out if you aren't using this option
   pull-requests: write
 
 jobs:
@@ -31,7 +34,8 @@ jobs:
         uses: actions/checkout@v4
       - name: 'Dependency Review'
         uses: actions/dependency-review-action@v4
-        # Commonly enabled options, see https://github.com/actions/dependency-review-action#configuration-options for all available options.
+        # Commonly enabled options, see
+        # https://github.com/actions/dependency-review-action#configuration-options for all available options.
         with:
           comment-summary-in-pr: always
         #   fail-on-severity: moderate

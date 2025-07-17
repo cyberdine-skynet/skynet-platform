@@ -2,7 +2,8 @@
 
 ## Overview
 
-MetalLB provides LoadBalancer services for bare metal Kubernetes clusters, enabling external access to services without cloud provider load balancers.
+MetalLB provides LoadBalancer services for bare metal Kubernetes clusters, enabling external access to services
+without cloud provider load balancers.
 
 ## Deployment Details
 

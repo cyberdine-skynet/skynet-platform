@@ -68,8 +68,8 @@ metadata:
   name: app-secrets
 type: Opaque
 stringData:
-  database.password: "your-password"
-  api.key: "your-api-key"
+  database.password: "your-password"  # pragma: allowlist secret
+  api.key: "your-api-key"  # pragma: allowlist secret
 ```
 
 **Environment Variables** in deployment:
@@ -232,7 +232,7 @@ Use services to connect to databases:
 
 ```yaml
 # Database connection example
-DATABASE_URL: postgresql://username:password@postgres-service:5432/dbname
+DATABASE_URL: postgresql://username:password@postgres-service:5432/dbname  # pragma: allowlist secret
 ```
 
 ## Security Considerations

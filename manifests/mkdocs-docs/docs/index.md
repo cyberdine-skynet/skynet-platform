@@ -4,7 +4,9 @@ Welcome to the Skynet Platform - a complete GitOps infrastructure platform built
 
 ## Overview
 
-Skynet Platform provides a production-ready Kubernetes infrastructure with automated deployment, monitoring, and scaling capabilities. Built following GitOps principles, everything is defined as code and managed through version control.
+Skynet Platform provides a production-ready Kubernetes infrastructure with automated deployment, monitoring, and
+scaling capabilities. Built following GitOps principles, everything is defined as code and managed through version
+control.
 
 ## Quick Start
 

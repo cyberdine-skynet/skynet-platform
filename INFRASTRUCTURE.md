@@ -2,7 +2,9 @@
 
 ## 🚀 Overview
 
-The Skynet Platform is a modern, cloud-native GitOps infrastructure built on Talos OS Kubernetes for bare metal NUC deployment. It implements a clean, modular, Helm-based approach with encrypted secrets management and comprehensive CI/CD workflows.
+The Skynet Platform is a modern, cloud-native GitOps infrastructure built on Talos OS Kubernetes for bare metal
+NUC deployment. It implements a clean, modular, Helm-based approach with encrypted secrets management and
+comprehensive CI/CD workflows.
 
 ## 🏗️ Architecture
 

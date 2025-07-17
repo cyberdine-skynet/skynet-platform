@@ -70,3 +70,5 @@ logs/
 # Backup files
 backup/
 *.backup
+*/.terraform/
+terraform.tfstate*

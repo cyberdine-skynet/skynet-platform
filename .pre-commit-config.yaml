@@ -22,11 +22,12 @@ repos:
       - id: markdownlint
         args: ['--config', '.markdownlint.yml', '--fix']
 
-  - repo: https://github.com/hadolint/hadolint
-    rev: v2.12.0
-    hooks:
-      - id: hadolint-docker
-        args: ['--ignore', 'DL3008', '--ignore', 'DL3009']
+  # Docker linting - commented out for CI environment compatibility
+  # - repo: https://github.com/hadolint/hadolint
+  #   rev: v2.12.0
+  #   hooks:
+  #     - id: hadolint-docker
+  #       args: ['--ignore', 'DL3008', '--ignore', 'DL3009']
 
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
