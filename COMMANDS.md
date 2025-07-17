@@ -449,20 +449,25 @@ kubectl get endpoints --all-namespaces
 ### Complete Infrastructure Reset
 
 ```bash
-# 1. Scale down Argo CD (stop sync)
+# 1.
+Scale down Argo CD (stop sync)
 kubectl scale deployment argocd-application-controller --replicas=0 -n argocd
 
-# 2. Delete all applications
+# 2.
+Delete all applications
 kubectl delete applications --all -n argocd
 
-# 3. Redeploy from Terraform
+# 3.
+Redeploy from Terraform
 cd terraform
 terraform apply
 
-# 4. Recreate root application
+# 4.
+Recreate root application
 kubectl apply -f apps/root-app-simple.yaml
 
-# 5. Scale up Argo CD
+# 5.
+Scale up Argo CD
 kubectl scale deployment argocd-application-controller --replicas=1 -n argocd
 ```
 

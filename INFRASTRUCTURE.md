@@ -3,7 +3,8 @@
 ## 🚀 Overview
 
 The Skynet Platform is a modern, cloud-native GitOps infrastructure built on Talos OS Kubernetes for bare metal
-NUC deployment. It implements a clean, modular, Helm-based approach with encrypted secrets management and
+NUC deployment.
+It implements a clean, modular, Helm-based approach with encrypted secrets management and
 comprehensive CI/CD workflows.
 
 ## 🏗️ Architecture
@@ -96,14 +97,18 @@ comprehensive CI/CD workflows.
 
 ## 🔧 Infrastructure Components
 
-### 1. Talos OS Kubernetes Cluster
+### 1
+
+Talos OS Kubernetes Cluster
 
 - **Purpose**: Immutable, secure Kubernetes OS
 - **Node**: 192.168.1.175 (control-plane)
 - **Network**: 192.168.1.x subnet
 - **Features**: Minimal attack surface, API-driven configuration
 
-### 2. Argo CD (GitOps Controller)
+### 2
+
+Argo CD (GitOps Controller)
 
 - **Purpose**: Continuous deployment from Git repositories
 - **Pattern**: App-of-Apps for hierarchical application management
@@ -112,7 +117,9 @@ comprehensive CI/CD workflows.
   - NodePort: http://192.168.1.175:30180
   - Ingress: http://argocd.fle.api64.de (via Traefik)
 
-### 3. Traefik (Ingress Controller)
+### 3
+
+Traefik (Ingress Controller)
 
 - **Purpose**: HTTP/HTTPS routing, load balancing, TLS termination
 - **LoadBalancer IP**: 192.168.1.201 (via MetalLB)
@@ -123,20 +130,26 @@ comprehensive CI/CD workflows.
   - Prometheus metrics
   - Kubernetes Ingress & CRD support
 
-### 4. MetalLB (LoadBalancer Provider)
+### 4
+
+MetalLB (LoadBalancer Provider)
 
 - **Purpose**: Bare metal LoadBalancer implementation
 - **IP Pool**: 192.168.1.200-192.168.1.220
 - **Mode**: L2 Advertisement
 - **Features**: Automatic IP allocation for LoadBalancer services
 
-### 5. cert-manager (TLS Certificate Manager)
+### 5
+
+cert-manager (TLS Certificate Manager)
 
 - **Purpose**: Automatic TLS certificate provisioning
 - **Issuers**: Let's Encrypt (staging & production)
 - **Features**: ACME HTTP-01 challenge, automatic renewal
 
-### 6. SOPS + Age (Secrets Management)
+### 6
+
+SOPS + Age (Secrets Management)
 
 - **Purpose**: Encrypted secrets in Git
 - **Encryption**: Age key-based encryption
@@ -179,27 +192,43 @@ skynet-platform/
 
 ### Phase 1: Foundation (Completed ✅)
 
-1. **Terraform Setup** - Argo CD deployment via Helm
-2. **GitOps Bootstrap** - Connected GitHub repository
-3. **App-of-Apps Pattern** - Hierarchical application management
+1.
+
+**Terraform Setup** - Argo CD deployment via Helm
+2.
+**GitOps Bootstrap** - Connected GitHub repository
+3.
+**App-of-Apps Pattern** - Hierarchical application management
 
 ### Phase 2: Networking (Completed ✅)
 
-1. **MetalLB** - LoadBalancer IP pool configuration
-2. **Traefik** - Ingress controller with dashboard
-3. **cert-manager** - TLS certificate automation
+1.
+
+**MetalLB** - LoadBalancer IP pool configuration
+2.
+**Traefik** - Ingress controller with dashboard
+3.
+**cert-manager** - TLS certificate automation
 
 ### Phase 3: Security (Completed ✅)
 
-1. **SOPS Configuration** - Age-based encryption setup
-2. **Encrypted Secrets** - Secure secrets management
-3. **CI/CD Security** - TFSec and dependency scanning
+1.
+
+**SOPS Configuration** - Age-based encryption setup
+2.
+**Encrypted Secrets** - Secure secrets management
+3.
+**CI/CD Security** - TFSec and dependency scanning
 
 ### Phase 4: Applications (In Progress 🔄)
 
-1. **Demo Applications** - Test workloads
-2. **Monitoring Stack** - Prometheus, Grafana, Loki (Planned)
-3. **Authentication** - Authentik identity provider (Planned)
+1.
+
+**Demo Applications** - Test workloads
+2.
+**Monitoring Stack** - Prometheus, Grafana, Loki (Planned)
+3.
+**Authentication** - Authentik identity provider (Planned)
 
 ## 🔐 Security Features
 
@@ -250,12 +279,19 @@ main branch (protected)
 
 ### Deployment Process
 
-1. **Feature Branch** - Create branch for changes
-2. **Development** - Make infrastructure changes
-3. **Testing** - Validate in development
-4. **Pull Request** - Code review process
-5. **Merge to Main** - Automatic deployment via Argo CD
-6. **Sync & Health** - Monitor application status
+1.
+
+**Feature Branch** - Create branch for changes
+2.
+**Development** - Make infrastructure changes
+3.
+**Testing** - Validate in development
+4.
+**Pull Request** - Code review process
+5.
+**Merge to Main** - Automatic deployment via Argo CD
+6.
+**Sync & Health** - Monitor application status
 
 ### Argo CD Apps Health
 
@@ -275,21 +311,33 @@ traefik              Synced        Healthy
 
 ### Immediate (Next Sprint)
 
-1. **Authentication** - Deploy Authentik identity provider
-2. **Monitoring** - Add Prometheus + Grafana stack
-3. **Documentation** - Component-specific README files
+1.
+
+**Authentication** - Deploy Authentik identity provider
+2.
+**Monitoring** - Add Prometheus + Grafana stack
+3.
+**Documentation** - Component-specific README files
 
 ### Medium Term
 
-1. **Backup Strategy** - Velero backup solution
-2. **Service Mesh** - Istio or Linkerd integration
-3. **Multi-tenancy** - Namespace isolation
+1.
+
+**Backup Strategy** - Velero backup solution
+2.
+**Service Mesh** - Istio or Linkerd integration
+3.
+**Multi-tenancy** - Namespace isolation
 
 ### Long Term
 
-1. **Multi-cluster** - Cluster federation
-2. **Edge Computing** - Edge node integration
-3. **AI/ML Workloads** - GPU support and ML pipelines
+1.
+
+**Multi-cluster** - Cluster federation
+2.
+**Edge Computing** - Edge node integration
+3.
+**AI/ML Workloads** - GPU support and ML pipelines
 
 ## 🛠️ Quick Start Commands
 
