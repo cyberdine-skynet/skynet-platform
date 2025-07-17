@@ -22,37 +22,40 @@ spec:
         # Traefik Helm values for Talos OS + MetalLB
         deployment:
           replicas: 1
-        
+
         # Use MetalLB LoadBalancer
         service:
           type: LoadBalancer
           annotations:
             metallb.universe.tf/loadBalancer-class: metallb
-        
+
         # Enable dashboard
         ingressRoute:
           dashboard:
             enabled: true
             annotations:
               traefik.ingress.kubernetes.io/router.tls: "true"
-        
+
         # Ports configuration
         ports:
           web:
             port: 8000
-            expose: true
+            expose:
+              default: true
             exposedPort: 80
           websecure:
             port: 8443
-            expose: true
+            expose:
+              default: true
             exposedPort: 443
             tls:
               enabled: true
           traefik:
             port: 9000
-            expose: true
+            expose:
+              default: false
             exposedPort: 9000
-        
+
         # Enable cert-manager integration
         providers:
           kubernetesIngress:
@@ -62,7 +65,7 @@ spec:
             enabled: true
             allowCrossNamespace: true
             allowExternalNameServices: true
-        
+
         # ACME/Let's Encrypt integration
         certificatesResolvers:
           letsencrypt:
@@ -72,14 +75,14 @@ spec:
               caServer: https://acme-v02.api.letsencrypt.org/directory
               httpChallenge:
                 entryPoint: web
-        
+
         # Talos OS optimizations
         securityContext:
           runAsNonRoot: true
           runAsUser: 65532
           runAsGroup: 65532
           readOnlyRootFilesystem: true
-        
+
         resources:
           requests:
             cpu: 100m
@@ -87,29 +90,29 @@ spec:
           limits:
             cpu: 300m
             memory: 150Mi
-        
+
         # Node selector for control plane
         nodeSelector:
           node-role.kubernetes.io/control-plane: ""
-        
+
         tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
           effect: NoSchedule
-        
+
         # Enable access logs and metrics
         logs:
           general:
             level: INFO
           access:
             enabled: true
-        
+
         metrics:
           prometheus:
             enabled: true
             addEntryPointsLabels: true
             addServicesLabels: true
-        
+
         # Global redirect HTTP to HTTPS
         globalArguments:
         - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
