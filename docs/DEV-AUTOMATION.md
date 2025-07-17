@@ -11,11 +11,13 @@ with VS Code, git hooks, and file watchers to provide seamless error detection a
 ## Quick Start
 
 1. **Setup automation (one-time)**:
+
    ```bash
    ./scripts/setup-dev-automation.sh
    ```
 
 2. **Start development with auto-fix**:
+
    ```bash
    # Option 1: File watcher (auto-fixes on file changes)
    ./scripts/dev-auto.sh watch
@@ -28,6 +30,7 @@ with VS Code, git hooks, and file watchers to provide seamless error detection a
    ```
 
 3. **Commit with auto-fix**:
+
    ```bash
    ./scripts/dev-auto.sh commit "feat: new feature"
    # OR use regular git commit (auto-fix runs via pre-commit hook)
@@ -131,6 +134,7 @@ Access via `Ctrl+Shift+P` → "Tasks: Run Task":
 ### Settings
 
 The workspace includes settings for:
+
 - Real-time linting and validation
 - Auto-format on save
 - 120-character rulers and word wrap
@@ -140,6 +144,7 @@ The workspace includes settings for:
 ### Extensions
 
 Recommended extensions (auto-installed):
+
 - `emeraldwalk.runonsave` - Auto-fix on file save
 - `davidanson.vscode-markdownlint` - Markdown linting
 - `redhat.vscode-yaml` - YAML validation
