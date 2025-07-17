@@ -53,3 +53,17 @@ dex:
   env:
     - name: ARGO_DEX_INSECURE
       value: "true"
+
+# Repo server configuration
+repoServer:
+  # Configure the container port with a name
+  containerPorts:
+    server: 8081
+    metrics: 8084
+  # Ensure the service uses the correct port reference
+  service:
+    ports:
+      - name: tcp-repo-server
+        port: 8081
+        protocol: TCP
+        targetPort: 8081
