@@ -1,5 +1,10 @@
 # Skynet Platform GitIgnore
 
+# Cluster dumps and exports
+k8s-cluster-export-*
+*.tar.gz
+export-k8s-cluster*.sh
+
 # Temporary files
 *.tmp
 *.bak

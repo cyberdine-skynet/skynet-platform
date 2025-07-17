@@ -1,6 +1,18 @@
 # Skynet Platform
 
-A clean, production-ready GitOps platform using Terraform and Helm to deploy Argo CD on Talos OS Kubernetes clusters.
+A clean, production-ready GitOps platform ## 📊 Current Applications
+
+| Application | Namespace | Status | Description | Access |
+|-------------|-----------|--------|-------------|---------|
+| **Argo CD** | `argocd` | ✅ Running | GitOps controller (Terraform managed) | NodePort 30180/30543 |
+| **Demo App** | `demo-app` | ✅ Running | Secure nginx demo workload | ClusterIP:80 → 8080 |
+
+## 📈 Live Cluster Status
+
+- **Argo CD Applications**: 2 deployed (skynet-root-app, demo-app)
+- **Helm Releases**: 1 (argocd v2.10.7 via chart 6.7.12)
+- **Active Namespaces**: argocd, demo-app, cert-manager, plus system namespaces
+- **Demo App Replicas**: 2 pods running healthyTerraform and Helm to deploy Argo CD on Talos OS Kubernetes clusters.
 
 ## 🏗️ Architecture
 
