@@ -21,6 +21,7 @@ repos:
     hooks:
       - id: markdownlint
         args: ['--config', '.markdownlint.yml', '--fix']
+        exclude: 'terraform/\.terraform/.*|node_modules/.*'
 
   # Docker linting - commented out for CI environment compatibility
   # - repo: https://github.com/hadolint/hadolint

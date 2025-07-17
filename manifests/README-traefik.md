@@ -2,7 +2,8 @@
 
 ## 📋 Overview
 
-Traefik is our cloud-native ingress controller that provides HTTP/HTTPS routing, load balancing, and TLS termination for all services in the Skynet Platform.
+Traefik is our cloud-native ingress controller that provides HTTP/HTTPS routing, load balancing, and TLS
+termination for all services in the Skynet Platform.
 
 ## 🚀 Deployment Details
 

@@ -2,7 +2,8 @@
 
 ## 📋 Overview
 
-cert-manager automates the management and issuance of TLS certificates from various certificate authorities, including Let's Encrypt, in Kubernetes clusters.
+cert-manager automates the management and issuance of TLS certificates from various certificate authorities,
+including Let's Encrypt, in Kubernetes clusters.
 
 ## 🚀 Deployment Details
 
