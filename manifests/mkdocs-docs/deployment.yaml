@@ -17,6 +17,8 @@ spec:
       labels:
         app: mkdocs-docs
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: mkdocs-docs
           image: ghcr.io/cyberdine-skynet/skynet-platform-docs:latest
