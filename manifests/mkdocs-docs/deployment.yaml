@@ -50,6 +50,13 @@ spec:
             capabilities:
               drop:
                 - ALL
+          volumeMounts:
+            - name: mkdocs-docs-pvc
+              mountPath: /docs-data
+      volumes:
+        - name: mkdocs-docs-pvc
+          persistentVolumeClaim:
+            claimName: mkdocs-docs-pvc
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
