@@ -17,6 +17,7 @@ spec:
         app: metallb
         component: controller
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: controller
           image: quay.io/metallb/controller:v0.13.12
@@ -29,3 +30,17 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+              storage: "1Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"

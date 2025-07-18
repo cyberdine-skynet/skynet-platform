@@ -16,6 +16,7 @@ spec:
         app: metallb
         component: speaker
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: speaker
           image: quay.io/metallb/speaker:v0.13.12
@@ -28,3 +29,17 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+              storage: "1Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
