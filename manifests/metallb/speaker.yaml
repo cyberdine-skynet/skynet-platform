@@ -30,30 +30,100 @@ spec:
           image: quay.io/metallb/speaker:v0.14.8
           args:
             - --port=7472
+            - --log-level=info
           ports:
             - containerPort: 7472
+              name: monitoring
               protocol: TCP
             - containerPort: 7946
+              name: memberlist-tcp
               protocol: TCP
             - containerPort: 7946
+              name: memberlist-udp
               protocol: UDP
           env:
             - name: METALLB_NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: METALLB_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: METALLB_ML_BIND_ADDR
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: METALLB_ML_LABELS
+              value: app.kubernetes.io/name=metallb,app.kubernetes.io/component=speaker
+            - name: METALLB_ML_BIND_PORT
+              value: "7946"
+            - name: METALLB_ML_SECRET_KEY_PATH
+              value: /etc/ml_secret_key
+            - name: METALLB_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           securityContext:
-            runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:
+              add:
+                - NET_RAW
               drop:
                 - ALL
-            seccompProfile:
-              type: RuntimeDefault
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "256Mi"
+            readOnlyRootFilesystem: true
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: monitoring
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: monitoring
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          resources: {}
+          volumeMounts:
+            - name: memberlist
+              mountPath: /etc/ml_secret_key
+            - name: metallb-excludel2
+              mountPath: /etc/metallb
+      hostNetwork: true
+      serviceAccountName: metallb-speaker
+      nodeSelector:
+        kubernetes.io/os: linux
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      volumes:
+        - name: memberlist
+          secret:
+            secretName: metallb-memberlist
+            defaultMode: 420
+        - name: metallb-excludel2
+          configMap:
+            name: metallb-excludel2
+            defaultMode: 256
+      securityContext:
+        fsGroup: 0
+        runAsNonRoot: false
+        runAsUser: 0
+      terminationGracePeriodSeconds: 0
