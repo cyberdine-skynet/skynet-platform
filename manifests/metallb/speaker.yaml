@@ -15,17 +15,28 @@ spec:
       labels:
         app: metallb
         component: speaker
+        app.kubernetes.io/component: speaker
+        app.kubernetes.io/instance: metallb
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: metallb
+        app.kubernetes.io/version: v0.14.8
+        helm.sh/chart: metallb-0.14.8
       annotations:
         argocd.argoproj.io/tracking-id: metallb-speaker
     spec:
       automountServiceAccountToken: false
       containers:
         - name: speaker
-          image: quay.io/metallb/speaker:v0.13.12
+          image: quay.io/metallb/speaker:v0.14.8
           args:
             - --port=7472
           ports:
             - containerPort: 7472
+              protocol: TCP
+            - containerPort: 7946
+              protocol: TCP
+            - containerPort: 7946
+              protocol: UDP
           env:
             - name: METALLB_NODE_NAME
               valueFrom:
