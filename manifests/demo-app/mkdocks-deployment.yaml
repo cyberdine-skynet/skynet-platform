@@ -1,0 +1,21 @@
+# mkdocks deployment block
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mkdocks
+  namespace: mkdocks
+spec:
+  selector:
+    matchLabels:
+      app: mkdocks
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mkdocks
+    spec:
+      containers:
+        - name: mkdocks
+          image: ghcr.io/cyberdine-skynet/skynet-platform/mkdocs:latest
+          ports:
+            - containerPort: 8080

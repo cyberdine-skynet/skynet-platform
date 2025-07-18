@@ -1,0 +1,7 @@
+namespace:
+  name: mkdocks
+  description: Namespace configuration for mkdocks documentation project
+  version: 1.0.0
+  owner: cyberdine
+  docs_path: docs/
+  site_url: https://docs.fle.api64.de

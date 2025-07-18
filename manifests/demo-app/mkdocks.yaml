@@ -1,0 +1,42 @@
+# mkdocks demo-app manifest
+# This file deploys mkdocks in its own namespace as a demo application
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: docks
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docks
+  namespace: docks
+spec:
+  selector:
+    matchLabels:
+      app: docks
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: docks
+    spec:
+      containers:
+        - name: docks
+          image: ghcr.io/cyberdine-skynet/skynet-platform/gzib5h20vf2ex9kcoi8egl89h
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docks-service
+  namespace: docks
+spec:
+  selector:
+    app: docks
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8888
+  type: ClusterIP
