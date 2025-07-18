@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: metallb-speaker
+  namespace: metallb-system
+  labels:
+    app: metallb
+spec:
+  selector:
+    matchLabels:
+      app: metallb
+      component: speaker
+  template:
+    metadata:
+      labels:
+        app: metallb
+        component: speaker
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: speaker
+          image: quay.io/metallb/speaker:v0.13.12
+          args:
+            - --port=7472
+          ports:
+            - containerPort: 7472
+          env:
+            - name: METALLB_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+              storage: "1Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
