@@ -21,7 +21,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: mkdocs-docs
-          image: ghcr.io/cyberdine-skynet/skynet-platform-docs:latest
+          image: ghcr.io/cyberdine-skynet/skynet-platform-docs:4d275eb
           ports:
             - containerPort: 8080
               name: http
